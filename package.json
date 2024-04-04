@@ -1,0 +1,28 @@
+{
+  "name": "meteo-server",
+  "version": "1.0.0",
+  "description": "Server app build for storing data from DIY meteorology station on my balcony",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "test": "echo \"that's kinda too small for testing\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/hekciu/meteo-server.git"
+  },
+  "author": "https://github.com/hekciu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hekciu/meteo-server/issues"
+  },
+  "homepage": "https://github.com/hekciu/meteo-server#readme",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.4"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
