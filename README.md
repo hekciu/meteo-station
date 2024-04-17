@@ -1,2 +1,2 @@
 # meteo-server
-I'm building small arduino based meteorology station integrated with server app to store and serve measurements
+I'm building small raspberrypi based meteorology station integrated with server app to store and serve measurements
