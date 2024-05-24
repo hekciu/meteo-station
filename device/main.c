@@ -2,6 +2,9 @@
 #include "pigpio.h"
 #include <unistd.h>
 
+const int PMS_5003_BAUD = 9600; // bits per second :p
+const int PMS_5003_READ_BYTES = 32; 
+
 enum EXIT_CODE {
 	SUCCESS = 0,
 	FAILURE = 1
@@ -17,13 +20,20 @@ typedef struct Data {
 	struct PmsData pmsData;
 } Data;
 
-void setPmsDataReader(Data * data) {
+void readPMSData(Data * data) {
 	PmsData pmsData = { 1, 2, 3 };
-	int handle = i2cOpen();
+	int serialHandle = serOpen("/dev/tty", PMS_5003_BAUD, 0);
+	printf("%d", serialHandle);
+
+	for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
+		int isOk = serReadByte(serialHandle);
+		if (!isOk) {
+			printf("something went wrong with reading byte %d from PMS", byteNr);
+		}
+	}
 	
 	data->pmsData = pmsData;
 
-	i2cClose(); // TODO: some flag if this should stop? maybe on error or something
 }
 
 void clearThings() {
@@ -46,13 +56,9 @@ int main() {
 
 	gpioSetMode(5, PI_OUTPUT);
 	
-	clearThings();
+	readPMSData(dataPtr);
+	while(0) { 
 	
-	while(1) { 
-		gpioWrite(5, 1);	
-		sleep(1);
-		gpioWrite(5, 0);
-		sleep(1);	
 	}
 	
 
