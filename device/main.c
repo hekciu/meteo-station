@@ -23,17 +23,22 @@ typedef struct Data {
 void readPMSData(Data * data) {
 	PmsData pmsData = { 1, 2, 3 };
 	int serialHandle = serOpen("/dev/tty", PMS_5003_BAUD, 0);
-	printf("%d", serialHandle);
 
 	for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
-		int isOk = serReadByte(serialHandle);
-		if (!isOk) {
-			printf("something went wrong with reading byte %d from PMS", byteNr);
+		int byte = serReadByte(serialHandle);
+		if (byte < 0) {
+			printf("something went wrong with reading byte %d from PMS, got code %d\n", byteNr, byte);
 		}
+
+		printf("got byte %d\n", byte);
 	}
 	
 	data->pmsData = pmsData;
+	int wasSerCloseSuccessful = serClose(serialHandle);
 
+	if (wasSerCloseSuccessful < 0) {
+		printf("closing serial connection was not successful, got code %d\n", wasSerCloseSuccessful);
+	}
 }
 
 void clearThings() {
@@ -54,11 +59,14 @@ int main() {
 	Data data = {{}};
 	Data * dataPtr =& data;
 
-	gpioSetMode(5, PI_OUTPUT);
+	// gpioSetMode(5, PI_OUTPUT);
 	
-	readPMSData(dataPtr);
 	while(0) { 
-	
+			
+	}
+
+	for (int i = 0; i < 25; i++) {
+		readPMSData(dataPtr);	
 	}
 	
 
