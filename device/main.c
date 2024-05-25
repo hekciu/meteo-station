@@ -22,12 +22,13 @@ typedef struct Data {
 
 void readPMSData(Data * data) {
 	PmsData pmsData = { 1, 2, 3 };
-	int serialHandle = serOpen("/dev/tty", PMS_5003_BAUD, 0);
+	int serialHandle = serOpen("/dev/ttyS0", PMS_5003_BAUD, 0);
 
 	for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
 		int byte = serReadByte(serialHandle);
 		if (byte < 0) {
 			printf("something went wrong with reading byte %d from PMS, got code %d\n", byteNr, byte);
+			continue;
 		}
 
 		printf("got byte %d\n", byte);
@@ -65,7 +66,7 @@ int main() {
 			
 	}
 
-	for (int i = 0; i < 25; i++) {
+	for (int i = 0; i < 3; i++) {
 		readPMSData(dataPtr);	
 	}
 	
