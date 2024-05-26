@@ -33,12 +33,14 @@ void readPMSData(Data * data) {
 	printf("bytes available: %d\n", bytesAvailable);	
 	
 	if (bytesAvailable == 0) {
+		serClose(serialHandle);
 		return;
 	}
 
 	int firstByte = serReadByte(serialHandle);
 
 	if (firstByte != PMS_START_BYTE) {
+		serClose(serialHandle);
 		return;
 	};
 
