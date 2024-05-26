@@ -4,6 +4,7 @@
 
 const int PMS_5003_BAUD = 9600; // bits per second :p
 const int PMS_5003_READ_BYTES = 32; 
+const int PMS_START_BYTE = 0x42;
 
 enum EXIT_CODE {
 	SUCCESS = 0,
@@ -27,6 +28,19 @@ void readPMSData(Data * data) {
 		printf("opening serial connection failed with %d code\n", serialHandle);
 		return;
 	}
+
+	int bytesAvailable = serDataAvailable(serialHandle);
+	printf("bytes available: %d\n", bytesAvailable);	
+	
+	if (bytesAvailable == 0) {
+		return;
+	}
+
+	int firstByte = serReadByte(serialHandle);
+
+	if (firstByte != PMS_START_BYTE) {
+		return;
+	};
 
 	for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
 		int byte = serReadByte(serialHandle);
@@ -70,8 +84,9 @@ int main() {
 			
 	}
 
-	for (int i = 0; i < 3; i++) {
+	for (;;) {
 		readPMSData(dataPtr);	
+		sleep(1);
 	}
 	
 
