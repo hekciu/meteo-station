@@ -22,7 +22,11 @@ typedef struct Data {
 
 void readPMSData(Data * data) {
 	PmsData pmsData = { 1, 2, 3 };
-	int serialHandle = serOpen("/dev/ttyS0", PMS_5003_BAUD, 0);
+	int serialHandle = serOpen("/dev/serial0", PMS_5003_BAUD, 0);
+	if (serialHandle < 0) {
+		printf("opening serial connection failed with %d code\n", serialHandle);
+		return;
+	}
 
 	for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
 		int byte = serReadByte(serialHandle);
