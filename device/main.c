@@ -21,6 +21,19 @@ typedef struct Data {
 	struct PmsData pmsData;
 } Data;
 
+void test() {
+	int serialHandle = serOpen("/dev/serial0", 9600, 0);
+
+	while (1) {
+		int bytesAvailable = serDataAvailable(serialHandle); 
+
+		printf("bytes available: %d\n", bytesAvailable);
+
+		sleep(2);
+	}
+
+}
+
 void readPMSData(Data * data) {
 	PmsData pmsData = { 1, 2, 3 };
 	int serialHandle = serOpen("/dev/serial0", PMS_5003_BAUD, 0);
@@ -29,31 +42,36 @@ void readPMSData(Data * data) {
 		return;
 	}
 
-	int bytesAvailable = serDataAvailable(serialHandle);
-	printf("bytes available: %d\n", bytesAvailable);	
+	while (1) {
+		sleep(1);
+		int bytesAvailable = serDataAvailable(serialHandle);
+		printf("bytes available: %d\n", bytesAvailable);	
 	
-	if (bytesAvailable == 0) {
-		serClose(serialHandle);
-		return;
-	}
+		if (bytesAvailable == 0) {
+			continue;
+		}
+	
+			
+		int firstByte = serReadByte(serialHandle);
 
-	int firstByte = serReadByte(serialHandle);
+		if (firstByte != PMS_START_BYTE) {
+			continue;
+		};
 
-	if (firstByte != PMS_START_BYTE) {
-		serClose(serialHandle);
-		return;
-	};
-
-	for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
-		int byte = serReadByte(serialHandle);
-		if (byte < 0) {
-			printf("something went wrong with reading byte %d from PMS, got code %d\n", byteNr, byte);
+		for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
+			int byte = serReadByte(serialHandle);
+			if (byte < 0) {
+				printf("something went wrong with reading byte %d from PMS, got code %d\n", byteNr, byte);
 			continue;
 		}
 
 		printf("got byte %d\n", byte);
 	}
 	
+	}
+
+	
+
 	data->pmsData = pmsData;
 	int wasSerCloseSuccessful = serClose(serialHandle);
 
@@ -86,7 +104,7 @@ int main() {
 			
 	}
 
-	for (;;) {
+	 for (;;) {
 		readPMSData(dataPtr);	
 		sleep(1);
 	}
