@@ -51,12 +51,16 @@ void readPMSData(Data * data) {
 			continue;
 		}
 	
+		for (int b = 0; b < bytesAvailable; b++) {
 			
-		int firstByte = serReadByte(serialHandle);
+			int firstByte = serReadByte(serialHandle);
+			printf("first byte: %d\n", firstByte);
 
-		if (firstByte != PMS_START_BYTE) {
-			continue;
-		};
+			if (firstByte != PMS_START_BYTE) {
+				continue;
+			};
+		}	
+		return; // dev
 
 		for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
 			int byte = serReadByte(serialHandle);
