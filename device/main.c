@@ -45,33 +45,38 @@ void readPMSData(Data * data) {
 	while (1) {
 		sleep(1);
 		int bytesAvailable = serDataAvailable(serialHandle);
-		printf("bytes available: %d\n", bytesAvailable);	
+		// printf("bytes available: %d\n", bytesAvailable);	
 	
 		if (bytesAvailable == 0) {
 			continue;
 		}
 	
 		for (int b = 0; b < bytesAvailable; b++) {
-			
 			int firstByte = serReadByte(serialHandle);
-			printf("first byte: %d\n", firstByte);
+			// printf("first byte: %d\n", firstByte);
 
 			if (firstByte != PMS_START_BYTE) {
 				continue;
 			};
+
+			int bytesLeft = bytesAvailable - b;
+			if (bytesLeft < PMS_5003_READ_BYTES) {
+				printf("too few bytes: %d < %d\n", bytesLeft, PMS_5003_READ_BYTES);
+				return;
+			}
+		
+			for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
+				int byte = serReadByte(serialHandle);
+				if (byte < 0) {
+					printf("something went wrong with reading byte %d from PMS, got code %d\n", byteNr, byte);
+				continue;
+
+				printf("got byte %d\n", byte);
+			}
+
 		}	
-		return; // dev
 
-		for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
-			int byte = serReadByte(serialHandle);
-			if (byte < 0) {
-				printf("something went wrong with reading byte %d from PMS, got code %d\n", byteNr, byte);
-			continue;
-		}
-
-		printf("got byte %d\n", byte);
 	}
-	
 	}
 
 	
