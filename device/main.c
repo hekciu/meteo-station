@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 const int PMS_5003_BAUD = 9600; // bits per second :p
-const int PMS_5003_READ_BYTES = 32; 
+const int PMS_5003_READ_BYTES = 31; 
 const int PMS_START_BYTE = 0x42;
 
 enum EXIT_CODE {
@@ -45,7 +45,6 @@ void readPMSData(Data * data) {
 	while (1) {
 		sleep(1);
 		int bytesAvailable = serDataAvailable(serialHandle);
-		// printf("bytes available: %d\n", bytesAvailable);	
 	
 		if (bytesAvailable == 0) {
 			continue;
@@ -53,7 +52,10 @@ void readPMSData(Data * data) {
 	
 		for (int b = 0; b < bytesAvailable; b++) {
 			int firstByte = serReadByte(serialHandle);
-			// printf("first byte: %d\n", firstByte);
+
+			if (firstByte < 0) {
+				printf("something wrong with pms byte, got %d\n", firstByte);
+			}
 
 			if (firstByte != PMS_START_BYTE) {
 				continue;
@@ -69,9 +71,9 @@ void readPMSData(Data * data) {
 				int byte = serReadByte(serialHandle);
 				if (byte < 0) {
 					printf("something went wrong with reading byte %d from PMS, got code %d\n", byteNr, byte);
-				continue;
 
 				printf("got byte %d\n", byte);
+				continue;
 			}
 
 		}	
