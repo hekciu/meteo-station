@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include "pigpio.h"
 #include <unistd.h>
+#include <string.h>
+#include <stdbool.h>
 
 const int PMS_5003_BAUD = 9600; // bits per second :p
-const int PMS_5003_READ_BYTES = 31; 
+const int PMS_5003_READ_BYTES = 32; 
 const int PMS_START_BYTE = 0x42;
 
 enum EXIT_CODE {
@@ -11,15 +13,18 @@ enum EXIT_CODE {
 	FAILURE = 1
 };
 
-typedef struct PmsData {
-	int _pm1;
-	int _pm25;
- 	int _pm10;
-} PmsData;
+struct PmsData {
+  uint16_t framelen;
+  uint16_t pm10_standard, pm25_standard, pm100_standard;
+  uint16_t pm10_env, pm25_env, pm100_env;
+  uint16_t particles_03um, particles_05um, particles_10um, particles_25um, particles_50um, particles_100um;
+  uint16_t unused;
+  uint16_t checksum;
+};
 
-typedef struct Data {
+struct Data {
 	struct PmsData pmsData;
-} Data;
+};
 
 void test() {
 	int serialHandle = serOpen("/dev/serial0", 9600, 0);
@@ -34,12 +39,12 @@ void test() {
 
 }
 
-void readPMSData(Data * data) {
-	PmsData pmsData = { 1, 2, 3 };
+bool readPMSData(struct Data * data) {
+	struct PmsData pmsData = { 1, 2, 3 };
 	int serialHandle = serOpen("/dev/serial0", PMS_5003_BAUD, 0);
 	if (serialHandle < 0) {
 		printf("opening serial connection failed with %d code\n", serialHandle);
-		return;
+		return false;
 	}
 
 	while (1) {
@@ -51,7 +56,7 @@ void readPMSData(Data * data) {
 		}
 	
 		for (int b = 0; b < bytesAvailable; b++) {
-			int firstByte = serReadByte(serialHandle);
+			uint8_t firstByte = serReadByte(serialHandle);
 
 			if (firstByte != PMS_START_BYTE) {
 				continue;
@@ -60,18 +65,41 @@ void readPMSData(Data * data) {
 			int bytesLeft = bytesAvailable - b;
 			if (bytesLeft < PMS_5003_READ_BYTES) {
 				printf("too few bytes: %d < %d\n", bytesLeft, PMS_5003_READ_BYTES);
-				return;
+				return false;
 			}
+
+			uint8_t bytes[32];
+			bytes[0] = firstByte;
+			uint16_t checkSum = firstByte;
 		
-			for (int byteNr = 0; byteNr < PMS_5003_READ_BYTES; byteNr++) {
+			for (int byteNr = 1; byteNr < PMS_5003_READ_BYTES; byteNr++) {
 				int byte = serReadByte(serialHandle);
 				if (byte < 0) {
 					continue;
 				}
-				printf("got byte %d", byte);
-			}	
+				
+				bytes[byteNr] = byte;
 
-	}
+				if (byteNr < 30) {
+					checkSum += byte;
+				}
+			}
+			
+			uint16_t buffer_u16[15];
+
+			for (uint8_t i = 0; i < 15; i++) {
+				buffer_u16[i] = bytes[2 + i*2 + 1];
+				buffer_u16[i] += (bytes[2 + i*2] << 8);
+			}		
+
+			memcpy((void *) &data->pmsData, (void *) buffer_u16, 30); 
+			
+			if (data->pmsData.checksum != checkSum) {
+				return false;
+			}
+			
+			return true;
+		}
 	}
 
 	
@@ -99,8 +127,8 @@ int main() {
 		return FAILURE;
 	}
 
-	Data data = {{}};
-	Data * dataPtr =& data;
+	struct Data data = {{}};
+	struct Data * dataPtr =& data;
 
 	// gpioSetMode(5, PI_OUTPUT);
 	
@@ -109,7 +137,9 @@ int main() {
 	}
 
 	 for (;;) {
-		readPMSData(dataPtr);	
+		if(readPMSData(dataPtr)) {
+			printf("data %d %d %d\n", data.pmsData.pm10_standard, data.pmsData.pm25_standard, data.pmsData.pm100_standard);
+		}	
 		sleep(1);
 	}
 	
