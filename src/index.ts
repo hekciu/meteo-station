@@ -8,4 +8,8 @@ app.get('/healthcheck', (_, res) => {
 	res.status(200).send('OK');
 })
 
-app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+app.post('/pmsData', (req, res) => {
+	
+})
+
+app.listen(PORT, () => console.info(`Listening on ${PORT}`));
