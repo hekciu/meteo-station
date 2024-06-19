@@ -112,13 +112,6 @@ bool readPMSData(struct Data * data) {
 	}
 }
 
-void clearThings() {
-	int outputPins[1] = { 5 };
-	for (int i = 0; i < 1; i++) {
-		gpioSetPullUpDown(outputPins[i], PI_PUD_DOWN);
-	}
-}
-
 int main() {
 	printf("Starting some shit\n");
 	int code = gpioInitialise();
@@ -129,12 +122,6 @@ int main() {
 
 	struct Data data = {{}};
 	struct Data * dataPtr =& data;
-
-	// gpioSetMode(5, PI_OUTPUT);
-	
-	while(0) { 
-			
-	}
 
 	 for (;;) {
 		if(readPMSData(dataPtr)) {
