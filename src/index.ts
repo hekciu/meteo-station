@@ -1,5 +1,5 @@
 import express from 'express';
-
+import errorHandler from './middleware/errorHandler';
 import DataController from './controllers/DataController';
 import { PORT } from './constants';
 
@@ -14,5 +14,7 @@ app.get('/healthcheck', (_, res) => {
 app.post('/data', (req, res, next) => {
 	DataController.insertData(req, res, next);
 })
+
+app.use(errorHandler);
 
 app.listen(PORT, () => console.info(`Listening on ${PORT}`));
