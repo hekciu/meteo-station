@@ -3,13 +3,17 @@ import MeteoServerError from '../utils/MeteoServerError';
 
 export default class DataController {
 	static async insertData(req: Request, res: Response, next: NextFunction) {
-		const { data = null } = req.body;
+		try {
+			const { data = null } = req.body;
 		
-		if (!data) {
-			next(new MeteoServerError(`Missing 'data' field in request`, 400));
+			if (!data) {
+				throw new MeteoServerError(`Missing 'data' field in request`, 400);
+			}
+
+
+			console.log(JSON.stringify(data));
+		} catch (e: unknown) {
+			next(e);
 		}
-
-
-		console.log(JSON.stringify(data));
 	}
 }
