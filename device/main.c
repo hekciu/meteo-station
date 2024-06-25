@@ -4,7 +4,9 @@
 #include <string.h>
 #include <stdbool.h>
 
-const int PMS_5003_BAUD = 9600; // bits per second :p
+#include "httpRequests.h"
+
+const int PMS_5003_BAUD = 9600;
 const int PMS_5003_READ_BYTES = 32; 
 const int PMS_START_BYTE = 0x42;
 
