@@ -1,5 +1,5 @@
 /*
-	This is designed to be simple one-header set of functions for making http requests
+	This is designed to be simple one-headered set of functions for making http requests
 */
 
 #include <string.h>
@@ -27,11 +27,37 @@ bool postStringData(char* url, char* data) {
 	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "meteo-station-edge/1.0.0");
 
 	res = curl_easy_perform();
+	curl_easy_cleanup(curl_handle);
 	
-	if (res == 0) {
+	if (res == CURLE_OK) {
 		return true;
 	}
 
 	return false;
 }
 
+bool getStringData(char* url) {
+	CURL * curl_handle;
+	CURLcode res;
+
+	curl_handle = curl_easy_init();
+
+	if(!curl_handle) {
+		return false;
+	}
+
+	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1);
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+	// curl_easy_setopt(curl_handle, CURLOPT_READFUNCTION, ReadMemoryCallback);
+	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "meteo-station-edge/1.0.0");
+
+	res = curl_easy_perform();
+	curl_easy_cleanup(curl_handle);
+	
+	if (res == CURLE_OK) {
+		return true;
+	}
+
+	return false;
+}
