@@ -1,9 +1,8 @@
 #include "httpRequests.h"
 
 int main() { 
-	const int size = 2;
-	char outputString[size];
-	getStringData("localhost:2137/healthcheck", outputString, size); 
-	printf(outputString);
+	char * outputStringPtr = NULL;
+	size_t size = getStringData("localhost:2137/healthcheck", &outputStringPtr); 
+	printf("%s\n", outputStringPtr);
 	return 0;
 }
