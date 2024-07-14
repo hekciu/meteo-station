@@ -12,6 +12,7 @@ export default class DataController {
 
 
 			console.log(JSON.stringify(data));
+			res.status(200).send("git");
 		} catch (e: unknown) {
 			next(e);
 		}

@@ -31,6 +31,20 @@ size_t WriteMemoryCallback(char * input, size_t size, size_t nmemb, void * userd
 	return realsize;
 }
 
+size_t ReadMemoryCallback(char * ptr, size_t size, size_t nmemb, void * userdata) {
+	size_t sizeAvailable = size * nmemb;
+	
+	struct MemoryStruct* mem = (struct MemoryStruct*)userdata;
+	
+	if (mem->size > sizeAvailable) {
+		printf("too big input to ReadMemoryCallback %ld > %ld", mem->size, sizeAvailable);
+		return -1;
+	}
+
+	memcpy(ptr, mem->memory, mem->size);	
+	return mem->size;
+}
+
 bool postStringData(char* url, char* data) {
 	CURL * curl_handle;
 	CURLcode res;
@@ -41,12 +55,15 @@ bool postStringData(char* url, char* data) {
 		return false;
 	}
 
+	struct MemoryStruct inputData;
+	inputData.memory = data;
+	inputData.size = strlen(data);
+
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
 	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1);
-	// curl_easy_setopt(curl_handle, CURLOPT_READFUNCTION, ReadMemoryCallback);
+	curl_easy_setopt(curl_handle, CURLOPT_READFUNCTION, ReadMemoryCallback);
+	curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void*)&inputData);
 	curl_easy_setopt(curl_handle, CURLOPT_POST, 1);
-	curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, data);
-	curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, strlen(data));
 	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "meteo-station-edge/1.0.0");
 
 	res = curl_easy_perform(curl_handle);
