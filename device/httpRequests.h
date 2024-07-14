@@ -7,9 +7,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "utils.h"
+
 struct MemoryStruct {
 	char * memory;
 	size_t size;
+	size_t itr;
 };
 
 size_t WriteMemoryCallback(char * input, size_t size, size_t nmemb, void * userdata) {
@@ -35,17 +38,20 @@ size_t ReadMemoryCallback(char * ptr, size_t size, size_t nmemb, void * userdata
 	size_t sizeAvailable = size * nmemb;
 	
 	struct MemoryStruct* mem = (struct MemoryStruct*)userdata;
-	
-	if (mem->size > sizeAvailable) {
-		printf("too big input to ReadMemoryCallback %ld > %ld", mem->size, sizeAvailable);
-		return -1;
+
+	size_t dataSize = takeSmallerSize(mem->size, sizeAvailable);	
+
+	if (mem->itr == mem->size) {
+		return 0;
+	} else {
+		mem->itr += dataSize;
 	}
 
-	memcpy(ptr, mem->memory, mem->size);	
-	return mem->size;
+	memcpy(ptr, mem->memory, dataSize);	
+	return dataSize;
 }
 
-bool postStringData(char* url, char* data) {
+bool postJsonData(char* url, char* data) {
 	CURL * curl_handle;
 	CURLcode res;
 
@@ -56,8 +62,17 @@ bool postStringData(char* url, char* data) {
 	}
 
 	struct MemoryStruct inputData;
-	inputData.memory = data;
 	inputData.size = strlen(data);
+	inputData.memory = malloc(inputData.size);
+	memcpy(inputData.memory, data, inputData.size);
+	inputData.itr = 0;
+
+	struct curl_slist * headers = NULL;
+	headers = curl_slist_append(headers, "Content-Type: application/json");
+	if (!headers) {
+		free(inputData.memory);
+		return false;
+	}
 
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
 	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1);
@@ -65,10 +80,14 @@ bool postStringData(char* url, char* data) {
 	curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void*)&inputData);
 	curl_easy_setopt(curl_handle, CURLOPT_POST, 1);
 	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "meteo-station-edge/1.0.0");
+	curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
 
 	res = curl_easy_perform(curl_handle);
+
+	curl_slist_free_all(headers);
 	curl_easy_cleanup(curl_handle);
-	
+	free(inputData.memory);
+
 	if (res == CURLE_OK) {
 		return true;
 	}
