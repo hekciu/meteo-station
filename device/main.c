@@ -3,12 +3,15 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <cstdio.h>
 
 #include "httpRequests.h"
 
-const int PMS_5003_BAUD = 9600;
-const int PMS_5003_READ_BYTES = 32; 
-const int PMS_START_BYTE = 0x42;
+#define PMS_5003_BAUD 9600;
+#define PMS_5003_READ_BYTES 32; 
+#define PMS_START_BYTE 0x42;
+#define MAX_OUTPUT_DATA_LENGTH 1024;
+
 
 enum EXIT_CODE {
 	SUCCESS = 0,
@@ -27,6 +30,17 @@ struct PmsData {
 struct Data {
 	struct PmsData pmsData;
 };
+
+size_t createDataJson(struct Data * data, char * output) {
+	if (output != NULL) {
+		printf("pointer to output string needs to be NULL\n");
+		return -1;
+	}
+
+	size_t size = snprintf(output, MAX_OUTPUT_DATA_LENGTH, "{ \"data\": \"{\" \"pm10_standard\": %hu, \"pm25_standard\": %hu, \"pm100_standard\": %hu \"}\"  }");	
+
+	return size;
+}
 
 void test() {
 	int serialHandle = serOpen("/dev/serial0", 9600, 0);
@@ -123,13 +137,21 @@ int main() {
 	}
 
 	struct Data data = {{}};
-	struct Data * dataPtr =& data;
+	// struct Data * dataPtr =& data;
 
 	 for (;;) {
-		if(readPMSData(dataPtr)) {
+		if(readPMSData(&data)) {
 			printf("data %d %d %d\n", data.pmsData.pm10_standard, data.pmsData.pm25_standard, data.pmsData.pm100_standard);
+
+			printf("creating data json");
+			char * output = NULL;
+			size_t outputSize = createDataJson(&data, output); 
+			printf("sending data to server");
+			postJsonData("localhost:2137/data", output);
+
+			free(output);
 		}	
-		sleep(1);
+		sleep(5);
 	}
 	
 
