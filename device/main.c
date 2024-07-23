@@ -3,14 +3,15 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
-#include <cstdio.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "httpRequests.h"
 
-#define PMS_5003_BAUD 9600;
-#define PMS_5003_READ_BYTES 32; 
-#define PMS_START_BYTE 0x42;
-#define MAX_OUTPUT_DATA_LENGTH 1024;
+#define PMS_5003_BAUD 9600
+#define PMS_5003_READ_BYTES 32
+#define PMS_START_BYTE 0x42
+#define MAX_OUTPUT_DATA_LENGTH 1024
 
 
 enum EXIT_CODE {
@@ -32,12 +33,7 @@ struct Data {
 };
 
 size_t createDataJson(struct Data * data, char * output) {
-	if (output != NULL) {
-		printf("pointer to output string needs to be NULL\n");
-		return -1;
-	}
-
-	size_t size = snprintf(output, MAX_OUTPUT_DATA_LENGTH, "{ \"data\": \"{\" \"pm10_standard\": %hu, \"pm25_standard\": %hu, \"pm100_standard\": %hu \"}\"  }");	
+	size_t size = snprintf(output, MAX_OUTPUT_DATA_LENGTH, "{ \"data\": { \"pm10_standard\": %hu, \"pm25_standard\": %hu, \"pm100_standard\": %hu }  }", data->pmsData.pm10_standard, data->pmsData.pm25_standard, data->pmsData.pm100_standard);	
 
 	return size;
 }
@@ -129,25 +125,36 @@ bool readPMSData(struct Data * data) {
 }
 
 int main() {
-	printf("Starting some shit\n");
+	printf("Starting some shit ngl\n");
+
+	char * serverUsername = getenv("SERVER_USERNAME");
+	char * serverPassword = getenv("SERVER_PASSWORD");
+	char * serverUrl = getenv("SERVER_URL");
+
+	free(serverUsername);
+	free(serverPassword); // TODO: add auth header
+
 	int code = gpioInitialise();
 	if (code < 0) {
-		printf("Gpio initialization failed");
+		printf("Gpio initialization failed code: %d \n", code);
 		return FAILURE;
 	}
 
 	struct Data data = {{}};
-	// struct Data * dataPtr =& data;
 
 	 for (;;) {
 		if(readPMSData(&data)) {
 			printf("data %d %d %d\n", data.pmsData.pm10_standard, data.pmsData.pm25_standard, data.pmsData.pm100_standard);
 
-			printf("creating data json");
-			char * output = NULL;
+			printf("creating data json\n");
+			char * output = malloc(MAX_OUTPUT_DATA_LENGTH);
 			size_t outputSize = createDataJson(&data, output); 
-			printf("sending data to server");
-			postJsonData("localhost:2137/data", output);
+			printf("sending data to server\n");
+			if(postJsonData(serverUrl, output)) {
+				printf("success!!\n");
+			} else {
+				printf("failure\n");
+			}
 
 			free(output);
 		}	
@@ -156,5 +163,6 @@ int main() {
 	
 
 	gpioTerminate();
+	free(serverUrl);
 	return SUCCESS;
 }
