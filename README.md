@@ -15,5 +15,4 @@ I'm building small raspberrypi-based meteorology station integrated with server 
 - cd device
 - cp env.sh.template env.sh
 - [fill env.sh with values]
-- source env.sh
-- make all
+- sudo bash run.sh
