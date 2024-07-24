@@ -1,3 +1,4 @@
 *.o
 thing
 test
+env.sh

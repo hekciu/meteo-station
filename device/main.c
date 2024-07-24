@@ -124,15 +124,11 @@ bool readPMSData(struct Data * data) {
 	}
 }
 
-int main() {
+int main(int argc, char * argv[], char * envp[]) {
 	printf("Starting some shit ngl\n");
 
-	char * serverUsername = getenv("SERVER_USERNAME");
-	char * serverPassword = getenv("SERVER_PASSWORD");
 	char * serverUrl = getenv("SERVER_URL");
-
-	free(serverUsername);
-	free(serverPassword); // TODO: add auth header
+	char * serverAuthEncoded = getenv("SERVER_AUTH_ENCODED");
 
 	int code = gpioInitialise();
 	if (code < 0) {
@@ -163,6 +159,5 @@ int main() {
 	
 
 	gpioTerminate();
-	free(serverUrl);
 	return SUCCESS;
 }

@@ -1,3 +1,5 @@
+current_dir := $(shell pwd)
+
 all: thing
 
 thing: main.c

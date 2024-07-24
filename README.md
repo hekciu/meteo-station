@@ -13,4 +13,7 @@ I'm building small raspberrypi-based meteorology station integrated with server 
 - sudo apt-get install libcurl4-openssl-dev
 - [install pigpio library if it's not present on your machine(but it should be I guess)]
 - cd device
+- cp env.sh.template env.sh
+- [fill env.sh with values]
+- source env.sh
 - make all
