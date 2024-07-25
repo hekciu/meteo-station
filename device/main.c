@@ -146,7 +146,7 @@ int main(int argc, char * argv[], char * envp[]) {
 			char * output = malloc(MAX_OUTPUT_DATA_LENGTH);
 			size_t outputSize = createDataJson(&data, output); 
 			printf("sending data to server\n");
-			if(postJsonData(serverUrl, output)) {
+			if(postJsonData(serverUrl, output, serverAuthEncoded)) {
 				printf("success!!\n");
 			} else {
 				printf("failure\n");

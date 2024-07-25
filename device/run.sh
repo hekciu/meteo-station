@@ -1,4 +1,2 @@
 source env.sh
-make thing
-chmod +x thing
-./thing
+make thing && chmod +x thing && ./thing
