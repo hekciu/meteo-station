@@ -2,8 +2,12 @@
 I'm building small raspberrypi-based meteorology station integrated with server app to store and serve measurements
 
 ## Starting server app:
-- [install liquibase]
-- [install postgres and set up db]
+- sudo apt install postgresql
+- sudo systemctl start postgresql.service
+- sudo -u postgres createuser --interactive # create role called 'meteo-station'
+- sudo -u postgres createdb meteo-station
+- sudo adduser meteo-station
+- sudo -u meteo-station psql -d meteo-station
 - cp .env.schema .env
 - [fill .env with values]
 - npm install
