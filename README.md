@@ -1,14 +1,17 @@
 # meteo-station
 I'm building small raspberrypi-based meteorology station integrated with server app to store and serve measurements
 
-## Starting server app:
+## Configuring database for server app
 - sudo apt install postgresql
 - sudo systemctl start postgresql.service
-- sudo -u postgres createuser --interactive # create role called 'meteo-station'
-- sudo -u postgres createdb meteo-station
-- sudo adduser meteo-station
-- sudo -u meteo-station psql -d meteo-station
-- cp .env.schema .env
+- sudo -u postgres createuser <username>
+- sudo -u postgres createdb <dbname>
+- sudo -u postgres psql
+-> alter user <username> with encrypted password '<password>';
+-> grant all privileges od database <dbname> to <username>;
+
+## Starting server app:
+- cp .env.template .env
 - [fill .env with values]
 - npm install
 - npm run start
