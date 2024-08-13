@@ -8,7 +8,7 @@ I'm building small raspberrypi-based meteorology station integrated with server 
 - sudo -u postgres createdb \<dbname\>
 - sudo -u postgres psql
 - > alter user \<username\> with encrypted password '\<password\>';
-- > grant all privileges od database \<dbname\> to \<username\>;
+- > grant all privileges of database \<dbname\> to \<username\>;
 
 ## Starting server app:
 - cp .env.template .env
