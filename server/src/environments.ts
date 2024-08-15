@@ -16,4 +16,4 @@ for (const key of Object.keys(ENVIRONMENTS)) {
 	}
 }
 
-export default ENVIRONMENTS;
+export default ENVIRONMENTS as Record<string, string>;
