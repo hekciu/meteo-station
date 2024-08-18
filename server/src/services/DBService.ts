@@ -14,9 +14,9 @@ export default class DBService {
 			host: ENVIRONMENTS.POSTGRES_HOST,
 			port: 5432,
 			database: ENVIRONMENTS.POSTGRES_DB,
-			user: ENVIRONMENTS.POSTGRES_USER,
+			user: ENVIRONMENTS.POSTGRES_USERNAME,
 			password: ENVIRONMENTS.POSTGRES_PASSWORD,
-			ssl: true
+		//	ssl: true
 		})	
 
 		try {

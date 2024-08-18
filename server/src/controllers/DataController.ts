@@ -22,12 +22,14 @@ export default class DataController {
 	}
 
 	static async getMeasurements(req: Request, res: Response, next: NextFunction) {
-		const { dataType = null, lookBackTimestamp = null } = req.params;	
+		const { dataType = null, lookBackTimestamp = null } = req.query;	
 
 		if (!dataType || !lookBackTimestamp) {
-			throw new MeteoServerError(`Missing 'dataType' or 'lookBackTimestamp' query param`, 400);
+			new MeteoServerError(`Missing 'dataType' or 'lookBackTimestamp' query param`, 400);
 		}
 
 		const data = await DBService.getMeasurements(dataType as MeteoDataType, Number(lookBackTimestamp));
+
+		res.status(200).send(data);
 	}
 }
