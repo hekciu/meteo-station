@@ -10,13 +10,13 @@ export default class DataController {
 	}
 
 	static async insertData(req: Request, res: Response, next: NextFunction) {
-		const { data = null } = req.body;
+		const { data = null, dataType = null } = req.body;
 	
-		if (!data) {
-			throw new MeteoServerError(`Missing 'data' field in request`, 400);
+		if (!data || !dataType) {
+			throw new MeteoServerError(`Missing 'data' or 'dataType' field in request`, 400);
 		}
-
-
+		
+		await DBService.insertMeasurement(dataType as MeteoDataType, data as Record<string, any>);
 		console.log(JSON.stringify(data));
 		res.status(200).send("git");
 	}
