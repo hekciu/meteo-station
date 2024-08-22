@@ -22,7 +22,6 @@ source update_database.sh
 - cp .env.template .env
 ### fill .env with values
 - npm install
-- npm run update-db
 - npm run start
 
 ## Building and starting app on raspberrypi:
