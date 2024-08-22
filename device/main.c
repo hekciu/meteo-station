@@ -32,8 +32,10 @@ struct Data {
 	struct PmsData pmsData;
 };
 
-size_t createDataJson(struct Data * data, char * output) {
-	size_t size = snprintf(output, MAX_OUTPUT_DATA_LENGTH, "{ \"data\": { \"pm10_standard\": %hu, \"pm25_standard\": %hu, \"pm100_standard\": %hu }  }", data->pmsData.pm10_standard, data->pmsData.pm25_standard, data->pmsData.pm100_standard);	
+size_t createPMS5003DataJson(struct Data * data, char * output, char * deviceName) {
+	uint32_t timestamp = getCurrentTimestamp();
+
+	size_t size = snprintf(output, MAX_OUTPUT_DATA_LENGTH, "{ \"dataType\": \"PMS5003\", \"data\": { \"pm10_standard\": %hu, \"pm25_standard\": %hu, \"pm100_standard\": %hu, \"device_name\": \"%s\", \"device_timestamp\": %d }  }", data->pmsData.pm10_standard, data->pmsData.pm25_standard, data->pmsData.pm100_standard, deviceName, timestamp);	
 
 	return size;
 }
@@ -129,6 +131,7 @@ int main(int argc, char * argv[], char * envp[]) {
 
 	char * serverUrl = getenv("SERVER_URL");
 	char * serverAuthEncoded = getenv("SERVER_AUTH_ENCODED");
+	char * deviceName = getenv("DEVICE_NAME");
 
 	int code = gpioInitialise();
 	if (code < 0) {
@@ -144,7 +147,7 @@ int main(int argc, char * argv[], char * envp[]) {
 
 			printf("creating data json\n");
 			char * output = malloc(MAX_OUTPUT_DATA_LENGTH);
-			size_t outputSize = createDataJson(&data, output); 
+			size_t outputSize = createPMS5003DataJson(&data, output, deviceName);
 			printf("sending data to server\n");
 			if(postJsonData(serverUrl, output, serverAuthEncoded)) {
 				printf("success!!\n");
