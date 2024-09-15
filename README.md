@@ -1,6 +1,10 @@
 # meteo-station
 I'm building small raspberrypi-based meteorology station integrated with server app to store and serve measurements
 
+# current goals -> 
+- rewrite server app from typescript to C (using POSIX socket interface and libpq)
+- add support for DS18B20 temperature sensor
+
 ## Configuring database for server app
 - sudo apt install postgresql # at least 9.1 is needed
 - sudo systemctl start postgresql.service
@@ -12,7 +16,7 @@ I'm building small raspberrypi-based meteorology station integrated with server 
 
 ### /db directory contains pseudo version management system for db
 ### it authorizes to db through provided credentials and configures it properly
-### you could do it from any linux machine that has psql installed
+### you could do it from any GNU/Linux machine that has psql installed
 - cp env.sh.template env.sh
 ### fill env.sh with values
 source update_database.sh
