@@ -3,7 +3,7 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
-void * HandleClient(void * arg);
+#include "handle_client.h"
 
 int main(int argc, char ** argv) {
     char * port_env = getenv("PORT");
@@ -53,7 +53,7 @@ int main(int argc, char ** argv) {
 		}
 
 		pthread_t thread_id;
-		pthread_create(&thread_id, NULL, HandleClient, (void *)client_fd);
+		pthread_create(&thread_id, NULL, handle_client, (void *)client_fd);
 		pthread_detach(thread_id);
 	}
 }
