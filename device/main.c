@@ -126,7 +126,7 @@ bool readPMSData(struct Data * data) {
 	}
 }
 
-int main(int argc, char * argv[], char * envp[]) {
+int main(int argc, char * argv[]) {
 	printf("Starting some shit ngl\n");
 
 	char * serverUrl = getenv("SERVER_URL");
