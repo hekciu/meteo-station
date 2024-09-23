@@ -6,6 +6,7 @@
 
 #include "constants.h"
 #include "build_response.h"
+#include "extract_header.h"
 
 void * handle_client(void * arg) {
 	int client_fd = *((int *)arg);
@@ -23,6 +24,11 @@ void * handle_client(void * arg) {
         if (reti == 0) {
 			char * response = NULL;
             printf("got http request\n");
+            char * authHeaderContent = NULL;
+            size_t authHeaderSize = extract_header(buffer, "Authorization", &authHeaderContent);
+            if (authHeaderSize < 0) {
+                printf("auth failed, TODO: handle this\n");
+            };
             size_t responseSize = build_response(&response);
             send(client_fd, response, responseSize, 0);
             if (response != NULL) {
