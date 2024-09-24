@@ -13,7 +13,7 @@ size_t extract_header(char * reqContent, char * headerName, char ** output) {
 
     regex_t regex;
     char * headerRegex = malloc(512 * sizeof(char)); // TODO: replace this magic number with BUFFER_SIZE global const
-    sprintf(headerRegex, "%s: *\n", headerName);
+    sprintf(headerRegex, "%s: .+\n", headerName);
     printf("regex body: %s\n", headerRegex);
     regcomp(&regex, headerRegex, REG_EXTENDED);
     regmatch_t matches[2];
