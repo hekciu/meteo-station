@@ -4,8 +4,6 @@
 #include <regex.h>
 
 size_t extract_header(char * reqContent, char * headerName, char ** output) {
-    size_t outputSize = -1;
-
     if(*output != NULL) {
         free(*output);
         *output = NULL;
@@ -24,11 +22,14 @@ size_t extract_header(char * reqContent, char * headerName, char ** output) {
         return -1;
     }
 
-    size_t headerContentSize = matches[0].rm_eo - matches[0].rm_so;
+    size_t headerNameSize = strlen(headerName);
+    int headerContentStart = matches[0].rm_so + headerNameSize + 2;
+    int headerContentEnd = matches[0].rm_eo;
+
+    int headerContentSize = headerContentEnd - headerContentStart;
     char * headerContent = malloc(headerContentSize + 1);
-    snprintf(headerContent, headerContentSize, reqContent + matches[0].rm_so);
-    printf("header content: %s\n", headerContent);
+    snprintf(headerContent, headerContentSize, reqContent + headerContentStart);
+    *(headerContent + headerContentSize) = '\0';
     
-    // TODO: parse this text blob and find all them headers 
-    return outputSize;
+    return headerContentSize;
 }
