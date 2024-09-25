@@ -14,19 +14,20 @@ size_t extract_header(char * reqContent, char * headerName, char ** output) {
     regex_t regex;
     char * headerRegex = malloc(512 * sizeof(char)); // TODO: replace this magic number with BUFFER_SIZE global const
     sprintf(headerRegex, "%s: .+\n", headerName);
-    printf("regex body: %s\n", headerRegex);
     regcomp(&regex, headerRegex, REG_EXTENDED);
     regmatch_t matches[2];
 
     int reti = regexec(&regex, reqContent, 2, matches, 0);
-    printf("reti: %d\n", reti);
+
     if (reti != 0) {
         fprintf(stderr, "Did not find requested header %s\n", headerName);
         return -1;
     }
 
-    size_t reqSize = strlen(reqContent);
-    printf("reqContent: %s\n\n\n", reqContent);
+    size_t headerContentSize = matches[0].rm_eo - matches[0].rm_so;
+    char * headerContent = malloc(headerContentSize + 1);
+    snprintf(headerContent, headerContentSize, reqContent + matches[0].rm_so);
+    printf("header content: %s\n", headerContent);
     
     // TODO: parse this text blob and find all them headers 
     return outputSize;
