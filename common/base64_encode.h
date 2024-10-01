@@ -33,19 +33,12 @@ size_t base64_encode(char * input, char ** output) {
         numCurrBit++;
     } 
     
-    while (numCurrBit != 0) {
-        printf("dupa, tutaj sie cos psuje\n");
-        if (numCurrBit == 6) {
-            *(*output + numCurrOutChar) = BASE64_ALPHABET[currCharIndex];
-            break;
-        } 
+    if (numCurrBit != 0) {
+        *(*output + numCurrOutChar) = BASE64_ALPHABET[currCharIndex];
+        numCurrOutChar++;
+    } 
 
-        currCharIndex += 0; 
-
-        numCurrBit++;
-    }
-
-    while((numCurrOutChar + 1) % 4 != 0) {
+    while((numCurrOutChar) % 4 != 0) {
         *(* output + numCurrOutChar) = PAD;
         numCurrOutChar++;
     }
