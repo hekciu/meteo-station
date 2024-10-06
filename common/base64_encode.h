@@ -1,3 +1,6 @@
+#ifndef BASE64_ENCODE_H
+#define BASE64_ENCODE_H
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -10,7 +13,8 @@ size_t base64_encode(char * input, char ** output) {
 
     int numBits = strlen(input) * 8;
     int outputBits = numBits + (numBits % 24 == 0 ? 0 : 24 - numBits % 24);
-    *output = malloc(outputBits / 8);
+    size_t outputSize = outputBits / 8;
+    *output = malloc(outputSize);
 
     int numCurrBit = 0;
     int numCurrOutChar = 0;
@@ -26,7 +30,6 @@ size_t base64_encode(char * input, char ** output) {
         
         int numCurrInBit = n % 8;
         uint8_t currentChar = (uint8_t)(*(input + numCurrInChar));
-        uint8_t currentMask = (uint8_t)1 << numCurrInBit;
         uint8_t bitValue = (currentChar >> (7 - numCurrInBit)) & (uint8_t)1;
         currCharIndex += bitValue * power(2, 5 - numCurrBit); 
 
@@ -42,4 +45,8 @@ size_t base64_encode(char * input, char ** output) {
         *(* output + numCurrOutChar) = PAD;
         numCurrOutChar++;
     }
+    
+    return outputSize;
 }
+
+#endif

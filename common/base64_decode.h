@@ -1,5 +1,11 @@
+#ifndef BASE64_DECODE_H
+#define BASE64_DECODE_H
+
 #include <stdint.h>
-#include "string.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "power.h"
 
 size_t base64_decode(char * input, char ** output) {
     const char BASE64_ALPHABET[64] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
@@ -45,7 +51,6 @@ size_t base64_decode(char * input, char ** output) {
         for (int n = 2; n < 8; ++n) {
             int currOutCharIndex = numOutBit / 8;            
 
-            uint8_t currentMask = (uint8_t)1 << n;
             uint8_t bitValue = ((uint8_t)currCharIndex >> (7 - n)) & (uint8_t)1;
             currOutChar += bitValue * power(2, 7 - numOutBit % 8); 
 
@@ -58,3 +63,4 @@ size_t base64_decode(char * input, char ** output) {
     }
 }
 
+#endif

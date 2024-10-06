@@ -5,8 +5,7 @@
 #include <unistd.h>
 
 #include "constants.h"
-#include "build_response.h"
-#include "extract_header.h"
+#include "_utils.h"
 #include "auth.h"
 
 void * handle_client(void * arg) {
