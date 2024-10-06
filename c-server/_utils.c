@@ -18,7 +18,7 @@ size_t build_response(char ** response) {
 }
 
 
-size_t extract_header(char * reqContent, char * headerName, char ** output) {
+int extract_header(char * reqContent, char * headerName, char ** output) {
     if(*output != NULL) {
         free(*output);
         *output = NULL;

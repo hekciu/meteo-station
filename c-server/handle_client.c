@@ -25,8 +25,15 @@ void * handle_client(void * arg) {
 			char * response = NULL;
             printf("got http request\n");
             char * authHeaderContent = NULL;
-            size_t authHeaderLength = extract_header(buffer, "Authorization", &authHeaderContent);
-            int authResult = auth(authHeaderContent, authHeaderLength);
+            int authHeaderLength = extract_header(buffer, "Authorization", &authHeaderContent);
+            printf("authHeaderLength: %d", authHeaderLength);
+            int authResult;
+            if (authHeaderLength <= 0) {
+                authResult = -1;
+            } else {
+                authResult = auth(authHeaderContent);
+            }
+
             if (authResult != 0) {
                 printf("auth failed, TODO: handle this\n");
             };
