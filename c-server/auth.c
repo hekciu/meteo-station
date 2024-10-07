@@ -6,6 +6,11 @@ int auth(char * authHeaderContent) {
     char * username = getenv("THIS_API_USERNAME");
     char * password = getenv("THIS_API_PASSWORD"); 
 
+    if (authHeaderContent == NULL) {
+        fprintf(stderr, "Got NULL auth header content\n");
+        return -1;
+    }
+
     if (username == NULL || password == NULL) {
         fprintf(stderr, "Missing THIS_API_USERNAME or THIS_API_PASSWORD env variable, could not perform auth\n");
         return -1;

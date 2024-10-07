@@ -4,9 +4,10 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "constants.h"
 #include "_utils.h"
 #include "auth.h"
+
+const int BUFFER_SIZE = 4096;
 
 void * handle_client(void * arg) {
 	int client_fd = *((int *)arg);
@@ -26,7 +27,6 @@ void * handle_client(void * arg) {
             printf("got http request\n");
             char * authHeaderContent = NULL;
             int authHeaderLength = extract_header(buffer, "Authorization", &authHeaderContent);
-            printf("authHeaderLength: %d", authHeaderLength);
             int authResult;
             if (authHeaderLength <= 0) {
                 authResult = -1;

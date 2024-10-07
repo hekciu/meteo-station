@@ -4,6 +4,7 @@
 #include <regex.h>
 
 
+
 size_t build_response(char ** response) {
     char * responseStart = "HTTP/1.1 200 OK \r\n";
     char * headers =
@@ -24,13 +25,15 @@ int extract_header(char * reqContent, char * headerName, char ** output) {
         *output = NULL;
     } 
 
-    regex_t regex;
-    char * headerRegex = malloc(512 * sizeof(char)); // TODO: replace this magic number with BUFFER_SIZE global const
-    sprintf(headerRegex, "%s: .+\n", headerName);
-    regcomp(&regex, headerRegex, REG_EXTENDED);
-    regmatch_t matches[2];
+    const int BUFFER_SIZE = 512;
 
-    int reti = regexec(&regex, reqContent, 2, matches, 0);
+    regex_t regex;
+    char * headerRegex = malloc(BUFFER_SIZE * sizeof(char));
+    sprintf(headerRegex, "%s: .*", headerName);
+    regcomp(&regex, headerRegex, REG_NEWLINE);
+    regmatch_t matches[1];
+
+    int reti = regexec(&regex, reqContent, 1, matches, 0);
 
     if (reti != 0) {
         fprintf(stderr, "Did not find requested header %s\n", headerName);
@@ -41,10 +44,10 @@ int extract_header(char * reqContent, char * headerName, char ** output) {
     int headerContentStart = matches[0].rm_so + headerNameSize + 2;
     int headerContentEnd = matches[0].rm_eo;
 
+
     int headerContentSize = headerContentEnd - headerContentStart;
-    char * headerContent = malloc(headerContentSize + 1);
-    snprintf(headerContent, headerContentSize, reqContent + headerContentStart);
-    *(headerContent + headerContentSize) = '\0';
+    *output = malloc(headerContentSize + 1);
+    snprintf(*output, headerContentSize, reqContent + headerContentStart);
     
     return headerContentSize;
 }
