@@ -23,7 +23,6 @@ void * handle_client(void * arg) {
         int reti = regexec(&regex, buffer, 2, matches, 0);
 
         if (reti == 0) {
-			char * response = NULL;
             printf("got http request\n");
             char * authHeaderContent = NULL;
             int authHeaderLength = extract_header(buffer, "Authorization", &authHeaderContent);
@@ -34,10 +33,16 @@ void * handle_client(void * arg) {
                 authResult = auth(authHeaderContent);
             }
 
+            size_t responseSize;
+			char * response = NULL;
             if (authResult != 0) {
-                printf("auth failed, TODO: handle this\n");
-            };
-            size_t responseSize = build_response(&response);
+                printf("auth failed\n");
+                responseSize = build_response_unauthorized(&response);
+            } else {
+                printf("client authorized successfully\n"); 
+                responseSize = build_response(&response);
+            }
+
             send(client_fd, response, responseSize, 0);
             if (response != NULL) {
                 free(response);

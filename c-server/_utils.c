@@ -4,6 +4,20 @@
 #include <regex.h>
 
 
+size_t build_response_unauthorized(char ** response) {
+    char * responseStart = "HTTP/1.1 403 Forbidden \r\n";
+    char * headers =
+        "Content-Type: text/html; charset=utf-8\r\n"
+        "Accept-Ranges: bytes\r\n"
+        "Connection: keep-alive\r\n\r\n";
+    char * bodyContent = "Unauthorized";
+    size_t length = strlen(responseStart) + strlen(headers) + strlen(bodyContent) + 1;
+    *response = malloc(length);
+    int lengthWithoutNull = snprintf(*response, length, "%s%s%s", responseStart, headers, bodyContent);
+
+    return (size_t)lengthWithoutNull;    
+}
+
 
 size_t build_response(char ** response) {
     char * responseStart = "HTTP/1.1 200 OK \r\n";
