@@ -65,7 +65,6 @@ int extract_header(char * reqContent, char * headerName, char ** output) {
     int reti = regexec(&regex, reqContent, 1, matches, 0);
 
     if (reti != 0) {
-        fprintf(stderr, "Did not find requested header %s\n", headerName);
         return -1;
     }
 
@@ -88,26 +87,23 @@ int extract_request_body(char * reqContent, char ** output) {
     } 
 
     regex_t regex;
-    // TODO: this parser below, reference: https://codereview.stackexchange.com/questions/188384/http-request-parser-in-c
-    char * headerRegex = "[.*";
-    regcomp(&regex, headerRegex, 0);
+    char * bodyRegex = "\r\n\r\n.*";
+    regcomp(&regex, bodyRegex, REG_EXTENDED);
     regmatch_t matches[1];
 
     int reti = regexec(&regex, reqContent, 1, matches, 0);
 
     if (reti != 0) {
-        fprintf(stderr, "Did not request body");
         return -1;
     }
 
-    size_t headerNameSize = strlen(headerName);
-    int headerContentStart = matches[0].rm_so + headerNameSize + 2;
-    int headerContentEnd = matches[0].rm_eo;
+    int bodyStart = matches[0].rm_so + 4;
+    int bodyEnd = matches[0].rm_eo;
 
-
-    int headerContentSize = headerContentEnd - headerContentStart;
-    *output = malloc(headerContentSize + 1);
-    snprintf(*output, headerContentSize, reqContent + headerContentStart);
+    // Not sure if this works correctly in case of \0 etc.
+    int bodySize = bodyEnd - bodyStart + 1;
+    *output = malloc(bodySize);
+    snprintf(*output, bodySize, reqContent + bodyStart);
     
-    return headerContentSize;
+    return bodySize;
 }

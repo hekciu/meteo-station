@@ -76,6 +76,7 @@ void * handle_client(void * arg) {
             size_t responseSize = _handle_get_request(endpointStr, authResult, &response); 
 
             free(endpointStr);
+            free(authHeaderContent);
 
             send(client_fd, response, responseSize, 0);
         } else if (post_reti == 0) {
@@ -84,22 +85,26 @@ void * handle_client(void * arg) {
             memcpy(endpointStr, buffer + matches[1].rm_so, endpointStrSize);            
             *(endpointStr + endpointStrSize) = '\0';
 
-            printf("POST GET %s\n", endpointStr);
+            printf("HTTP POST %s\n", endpointStr);
+            char * requestBody = NULL;
+            size_t requestBodySize = extract_request_body(buffer, &requestBody);
+            if (requestBodySize > 0) {
+                printf("With body:\n%s\n", requestBody);
+            }
+
             char * authHeaderContent = NULL;
             int authHeaderLength = extract_header(buffer, "Authorization", &authHeaderContent);
             int authResult = authHeaderLength <= 0 ? -1 : auth(authHeaderContent);
-
-            char * requestBody = NULL;
-            extract_request_body(buffer, &requestBody);
 
             size_t responseSize = _handle_post_request(endpointStr, authResult, requestBody, &response); 
 
             free(endpointStr);
             free(requestBody);
+            free(authHeaderContent);
 
             send(client_fd, response, responseSize, 0);
         } else {
-            char * UNSUPPORTED_PROTOCOL_MESSAGE = "Got unsupported protocol or method, only HTTP/1 POST and GET are available\r\n";
+            char * UNSUPPORTED_PROTOCOL_MESSAGE = "Got unsupported protocol or method, only HTTP/1 or HTTP/1.1 POST and GET are available\r\n";
             send(client_fd, UNSUPPORTED_PROTOCOL_MESSAGE, strlen(UNSUPPORTED_PROTOCOL_MESSAGE), 0); 
         }
 
