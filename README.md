@@ -21,8 +21,10 @@ I'm building small raspberrypi-based meteorology station integrated with server 
 ### fill env.sh with values
 source update_database.sh
 
+## Starting c server app:
+- sudo apt install libpq-dev
 
-## Starting server app:
+## Starting nodejs server app:
 - cp .env.template .env
 ### fill .env with values
 - npm install
