@@ -7,7 +7,7 @@ source_files = auth.c _utils.c handle_client.c _database.c
 build_files = $(source_files:%.c=$(build_dir)/%.o)
 
 server: main.c $(build_files) $(commons_dir)/*.h
-	gcc -Wall -o server -lpthread $^
+	gcc -Wall -o server $(build_files) -lpthread -lpq main.c 
 
 .PHONY: make_build_dir
 make_build_dir: 

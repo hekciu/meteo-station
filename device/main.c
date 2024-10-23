@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "httpRequests.h"
+#include "../common/get_current_timestamp.h"
 
 #define PMS_5003_BAUD 9600
 #define PMS_5003_READ_BYTES 32
@@ -33,7 +34,7 @@ struct Data {
 };
 
 size_t createPMS5003DataJson(struct Data * data, char * output, char * deviceName) {
-	uint32_t timestamp = getCurrentTimestamp();
+	uint32_t timestamp = get_current_timestamp();
 
 	size_t size = snprintf(output, MAX_OUTPUT_DATA_LENGTH, "{ \"dataType\": \"PMS5003\", \"data\": { \"pm10_standard\": %hu, \"pm25_standard\": %hu, \"pm100_standard\": %hu, \"device_name\": \"%s\", \"device_timestamp\": %d }  }", data->pmsData.pm10_standard, data->pmsData.pm25_standard, data->pmsData.pm100_standard, deviceName, timestamp);	
 

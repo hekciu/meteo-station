@@ -2,6 +2,7 @@
 
 #define MAX_PG_QUERY_SIZE 1024
 
-int _createConnInfoFromEnvs();
+int get_PMS5003_measurements(uint64_t timestampFrom, uint64_t timestampTo, char ** output);
 
-size_t get_measurements(uint64_t timestampFrom, uint64_t timestampTo);
+int insert_PMS5003_measurement(char * tableName, char * data);
+

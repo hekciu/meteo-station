@@ -65,7 +65,7 @@ int extract_header(char * reqContent, char * headerName, char ** output) {
     int reti = regexec(&regex, reqContent, 1, matches, 0);
 
     if (reti != 0) {
-        return -1;
+        return 1;
     }
 
     size_t headerNameSize = strlen(headerName);
@@ -77,7 +77,7 @@ int extract_header(char * reqContent, char * headerName, char ** output) {
     *output = malloc(headerContentSize + 1);
     snprintf(*output, headerContentSize, reqContent + headerContentStart);
     
-    return headerContentSize;
+    return 0;
 }
 
 int extract_request_body(char * reqContent, char ** output) {
@@ -94,7 +94,7 @@ int extract_request_body(char * reqContent, char ** output) {
     int reti = regexec(&regex, reqContent, 1, matches, 0);
 
     if (reti != 0) {
-        return -1;
+        return 1;
     }
 
     int bodyStart = matches[0].rm_so + 4;
@@ -105,5 +105,9 @@ int extract_request_body(char * reqContent, char ** output) {
     *output = malloc(bodySize);
     snprintf(*output, bodySize, reqContent + bodyStart);
     
-    return bodySize;
+    return 0;
+}
+
+int extract_query_param(char * endpoint, char * paramName, char ** output) {
+
 }

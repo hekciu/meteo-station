@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*
     Makes json string array from n separate strings. Need to be called n + 1 times.

@@ -6,15 +6,25 @@
 #include <string.h>
 
 #include "_utils.h"
+#include "_database.h"
 #include "auth.h"
 
-const int BUFFER_SIZE = 4096;
+#define BUFFER_SIZE 4096
 
 size_t _handle_get_request(char * endpointStr, int authResult, char ** response) {
     size_t responseSize;
 
-    if (strcmp(endpointStr, "/measurements") == 0) {
+    const char * PMS_5003_ENDPOINT = "/measurements/PMS5003";
+
+    if (strncmp(endpointStr, PMS_5003_ENDPOINT, strlen(PMS_5003_ENDPOINT)) == 0) {
         printf("sending response\n");
+        char * timestampFrom = NULL;
+        char * timestampTo = NULL;
+        if (extract_query_param(endpointStr, "timestampFrom", &timestampFrom) != 0) {
+             // fprintf 
+        };
+        extract_query_param(endpointStr, "timestampTo", timestampTo);
+        // get_PMS5003_measurements 
         responseSize = build_response(response);
     } else {
         printf("not found\n");
@@ -70,8 +80,7 @@ void * handle_client(void * arg) {
             
             printf("HTTP GET %s\n", endpointStr);
             char * authHeaderContent = NULL;
-            int authHeaderLength = extract_header(buffer, "Authorization", &authHeaderContent);
-            int authResult = authHeaderLength <= 0 ? -1 : auth(authHeaderContent);
+            int authResult = extract_header(buffer, "Authorization", &authHeaderContent) == 0 ? -1 : auth(authHeaderContent);
 
             size_t responseSize = _handle_get_request(endpointStr, authResult, &response); 
 
@@ -87,8 +96,7 @@ void * handle_client(void * arg) {
 
             printf("HTTP POST %s\n", endpointStr);
             char * requestBody = NULL;
-            size_t requestBodySize = extract_request_body(buffer, &requestBody);
-            if (requestBodySize > 0) {
+            if (extract_request_body(buffer, &requestBody) == 0) {
                 printf("With body:\n%s\n", requestBody);
             }
 
