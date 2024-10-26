@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <regex.h>
+#include <stdbool.h>
 
 
 size_t build_response_not_found(char ** response) {
@@ -15,9 +16,23 @@ size_t build_response_not_found(char ** response) {
     *response = malloc(length);
     int lengthWithoutNull = snprintf(*response, length, "%s%s%s", responseStart, headers, bodyContent);
 
-    return (size_t)lengthWithoutNull;    
+    return (size_t)lengthWithoutNull; // TODO this conversion does not make sense, maybe switch to int
 }
 
+
+size_t build_response_bad_request(char ** response, char * content) {
+    char * responseStart = "HTTP/1.1 400 Bad Request \r\n";
+    char * headers =
+        "Content-Type: text/html; charset=utf-8\r\n"
+        "Accept-Ranges: bytes\r\n"
+        "Connection: keep-alive\r\n\r\n";
+    char * bodyContent = content == NULL ? "Bad Request" : content;
+    size_t length = strlen(responseStart) + strlen(headers) + strlen(bodyContent) + 1;
+    *response = malloc(length);
+    int lengthWithoutNull = snprintf(*response, length, "%s%s%s", responseStart, headers, bodyContent);
+
+    return (size_t)lengthWithoutNull;  // TODO this conversion does not make sense, maybe switch to int   
+}
 
 size_t build_response_unauthorized(char ** response) {
     char * responseStart = "HTTP/1.1 403 Forbidden \r\n";
@@ -30,7 +45,7 @@ size_t build_response_unauthorized(char ** response) {
     *response = malloc(length);
     int lengthWithoutNull = snprintf(*response, length, "%s%s%s", responseStart, headers, bodyContent);
 
-    return (size_t)lengthWithoutNull;    
+    return (size_t)lengthWithoutNull; // TODO this conversion does not make sense, maybe switch to int 
 }
 
 
@@ -44,7 +59,7 @@ size_t build_response(char ** response) {
     size_t length = strlen(responseStart) + strlen(headers) + strlen(stringOrSomething) + 1;
     *response = malloc(length);
     int lengthWithoutNull = snprintf(*response, length, "%s%s%s", responseStart, headers, stringOrSomething);
-    return (size_t)lengthWithoutNull;    
+    return (size_t)lengthWithoutNull;// TODO this conversion does not make sense, maybe switch to int
 }
 
 
@@ -100,7 +115,6 @@ int extract_request_body(char * reqContent, char ** output) {
     int bodyStart = matches[0].rm_so + 4;
     int bodyEnd = matches[0].rm_eo;
 
-    // Not sure if this works correctly in case of \0 etc.
     int bodySize = bodyEnd - bodyStart + 1;
     *output = malloc(bodySize);
     snprintf(*output, bodySize, reqContent + bodyStart);
@@ -109,5 +123,55 @@ int extract_request_body(char * reqContent, char ** output) {
 }
 
 int extract_query_param(char * endpoint, char * paramName, char ** output) {
+    int endpointLen = strlen(endpoint);
+    int paramNameLen = strlen(paramName);
 
+    int paramNamePatternLen = paramNameLen + 1;
+    char * paramNamePattern = malloc(paramNameLen + 1);
+    sprintf(paramNamePattern, "%s=", paramName);
+
+    bool foundFirstParam = false;
+    int paramStartIndex = -1;
+    int paramContentLen = 0; 
+    for (int i = 0; i < endpointLen; i++) {
+        char charAtI = *(endpoint + i);
+
+        if (paramStartIndex > 0) {
+            if (charAtI == '&') {
+                break;
+            }
+
+            paramContentLen++;
+            continue;
+        }
+
+        if (!foundFirstParam && charAtI == '?') {
+            if (strncmp(endpoint + i + 1, paramNamePattern, paramNameLen) == 0) {
+                paramStartIndex = i + 1; 
+            } 
+        } 
+
+        if (foundFirstParam && charAtI == '&') {
+            if (strncmp(endpoint + i + 1, paramNamePattern, paramNameLen) == 0) {
+                paramStartIndex = i + 1; 
+            } 
+        } 
+
+        if (charAtI == '?') {
+            foundFirstParam = true;
+        }
+    } 
+
+    free(paramNamePattern);
+
+    if (paramStartIndex > 0 && paramContentLen > 0) {
+        int outputLen = paramContentLen - paramNamePatternLen;
+        *output = malloc(outputLen + 1);
+        
+        memcpy(*output, endpoint + paramNamePatternLen + paramStartIndex, outputLen); 
+        *(*output + outputLen) = '\0';
+        return 0;
+    }
+
+    return 1;
 }

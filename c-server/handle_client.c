@@ -13,7 +13,6 @@
 
 size_t _handle_get_request(char * endpointStr, int authResult, char ** response) {
     size_t responseSize;
-
     const char * PMS_5003_ENDPOINT = "/measurements/PMS5003";
 
     if (strncmp(endpointStr, PMS_5003_ENDPOINT, strlen(PMS_5003_ENDPOINT)) == 0) {
@@ -21,16 +20,19 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
         char * timestampFrom = NULL;
         char * timestampTo = NULL;
         if (extract_query_param(endpointStr, "timestampFrom", &timestampFrom) != 0) {
-             // fprintf 
+            fprintf(stderr, "Missing timestampFrom param\n"); 
+            responseSize = build_response_bad_request(response, "missing timestampFrom query param"); 
         };
-        extract_query_param(endpointStr, "timestampTo", timestampTo);
+        if (extract_query_param(endpointStr, "timestampTo", &timestampTo) != 0) {
+            fprintf(stderr, "Missing timestampTo param\n"); 
+            responseSize = build_response_bad_request(response, "missing timestampTo query param"); 
+        }
         // get_PMS5003_measurements 
         responseSize = build_response(response);
     } else {
-        printf("not found\n");
+        fprintf(stderr, "not found\n");
         responseSize = build_response_not_found(response);
     }
-
     return responseSize;
 };
 
@@ -125,4 +127,4 @@ void * handle_client(void * arg) {
         regfree(&post_regex);
 	}
     free(buffer);
-}
+};
