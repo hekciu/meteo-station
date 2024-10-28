@@ -16,10 +16,8 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
     const char * PMS_5003_ENDPOINT = "/measurements/PMS5003";
 
     if (strncmp(endpointStr, PMS_5003_ENDPOINT, strlen(PMS_5003_ENDPOINT)) == 0) {
-        printf("sending response\n");
         char * timestampFrom = NULL;
         char * timestampTo = NULL;
-        printf("endpointStr: %s\n", endpointStr);
         if (extract_query_param(endpointStr, "timestampFrom", &timestampFrom) != 0) {
             fprintf(stderr, "Missing timestampFrom param\n"); 
             timestampFrom = malloc(0);
@@ -47,7 +45,7 @@ size_t _handle_post_request(char * endpointStr, int authResult, char * requestBo
 
     if (strcmp(endpointStr, "/data") == 0) {
         if (authResult != 0) {
-            printf("auth failed\n");
+            fprintf(stderr, "auth failed\n");
             responseSize = build_response_unauthorized(response);
         } else {
             printf("client authorized successfully\n"); 
