@@ -19,16 +19,22 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
         printf("sending response\n");
         char * timestampFrom = NULL;
         char * timestampTo = NULL;
+        printf("endpointStr: %s\n", endpointStr);
         if (extract_query_param(endpointStr, "timestampFrom", &timestampFrom) != 0) {
             fprintf(stderr, "Missing timestampFrom param\n"); 
+            timestampFrom = malloc(0);
             responseSize = build_response_bad_request(response, "missing timestampFrom query param"); 
-        };
-        if (extract_query_param(endpointStr, "timestampTo", &timestampTo) != 0) {
+        } else if (extract_query_param(endpointStr, "timestampTo", &timestampTo) != 0) {
             fprintf(stderr, "Missing timestampTo param\n"); 
+            timestampTo = malloc(0);
             responseSize = build_response_bad_request(response, "missing timestampTo query param"); 
+        } else {
+            // get_PMS5003_measurements 
+            responseSize = build_response(response);
         }
-        // get_PMS5003_measurements 
-        responseSize = build_response(response);
+
+        free(timestampTo);
+        free(timestampFrom);
     } else {
         fprintf(stderr, "not found\n");
         responseSize = build_response_not_found(response);
