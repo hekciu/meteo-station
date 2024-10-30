@@ -1,3 +1,1 @@
-make server
-source env.sh
-./server
+make server && source env.sh && ./server

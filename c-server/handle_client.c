@@ -27,8 +27,29 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
             timestampTo = malloc(0);
             responseSize = build_response_bad_request(response, "missing timestampTo query param"); 
         } else {
-            // get_PMS5003_measurements 
-            responseSize = build_response(response);
+            char * fromError = malloc(strlen(timestampFrom) + 1);
+            char * toError = malloc(strlen(timestampTo) + 1);
+            int64_t from = strtoll(timestampFrom, &fromError, 10);
+            int64_t to = strtoll(timestampTo, &toError, 10);
+            if (strlen(fromError) != 0 || strlen(toError) != 0) {
+                char * text = "timestampTo and timestampFrom need to be valid integers";
+                fprintf(stderr, text);
+                responseSize = build_response_bad_request(response, text); 
+            } else {
+                char * content = NULL;
+                if (get_PMS5003_measurements((uint64_t)from, (uint64_t)to, &content) == 0) {
+                    responseSize = build_response(response, "found some shiet\n");
+                    free(content);
+                } else {
+                    responseSize = build_response_internal_server_error(response, "error with database connection\n");
+                }
+            }
+
+            // TODO: fix this thing
+            /*
+            free(fromError);
+            free(toError);
+            */
         }
 
         free(timestampTo);
@@ -49,7 +70,7 @@ size_t _handle_post_request(char * endpointStr, int authResult, char * requestBo
             responseSize = build_response_unauthorized(response);
         } else {
             printf("client authorized successfully\n"); 
-            responseSize = build_response(response);
+            responseSize = build_response(response, NULL);
         }
     } else {
         printf("not found\n");

@@ -34,6 +34,20 @@ size_t build_response_bad_request(char ** response, char * content) {
     return (size_t)lengthWithoutNull;  // TODO this conversion does not make sense, maybe switch to int   
 }
 
+size_t build_response_internal_server_error(char ** response, char * content) {
+    char * responseStart = "HTTP/1.1 500 Internal Server Error \r\n";
+    char * headers =
+        "Content-Type: text/html; charset=utf-8\r\n"
+        "Accept-Ranges: bytes\r\n"
+        "Connection: keep-alive\r\n\r\n";
+    char * bodyContent = content == NULL ? "Internal Server Error" : content;
+    size_t length = strlen(responseStart) + strlen(headers) + strlen(bodyContent) + 1;
+    *response = malloc(length);
+    int lengthWithoutNull = snprintf(*response, length, "%s%s%s", responseStart, headers, bodyContent);
+
+    return (size_t)lengthWithoutNull;  // TODO this conversion does not make sense, maybe switch to int   
+}
+
 size_t build_response_unauthorized(char ** response) {
     char * responseStart = "HTTP/1.1 403 Forbidden \r\n";
     char * headers =
@@ -49,13 +63,13 @@ size_t build_response_unauthorized(char ** response) {
 }
 
 
-size_t build_response(char ** response) {
+size_t build_response(char ** response, char * content) {
     char * responseStart = "HTTP/1.1 200 OK \r\n";
     char * headers =
         "Content-Type: text/html; charset=utf-8\r\n"
         "Accept-Ranges: bytes\r\n"
         "Connection: keep-alive\r\n\r\n";
-    char * stringOrSomething = "Hello from GNU/Linux C socket program";
+    char * stringOrSomething = content == NULL ? "Hello from GNU/Linux C socket program" : content;
     size_t length = strlen(responseStart) + strlen(headers) + strlen(stringOrSomething) + 1;
     *response = malloc(length);
     int lengthWithoutNull = snprintf(*response, length, "%s%s%s", responseStart, headers, stringOrSomething);
