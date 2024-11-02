@@ -132,6 +132,7 @@ int main(int argc, char * argv[]) {
 
 	char * serverUrl = getenv("SERVER_URL");
 	char * serverAuthEncoded = getenv("SERVER_AUTH_ENCODED");
+    // TODO: add requirement for max 20 characters in device name as it's the max one in db
 	char * deviceName = getenv("DEVICE_NAME");
 
 	int code = gpioInitialise();

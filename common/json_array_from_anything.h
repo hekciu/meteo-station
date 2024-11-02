@@ -22,6 +22,7 @@ uint64_t jsonArrayFromAnything(char ** output, char * input) {
         snprintf(*output + strlen(*output), newContentLen, ",%s", input);
     } else if (input == NULL) {
         realloc(*output, 2);
+        outputLen = strlen(*output) + 2;
         snprintf(*output + strlen(*output), 2, "]");
     }
 

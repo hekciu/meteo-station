@@ -45,11 +45,8 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
                 }
             }
 
-            // TODO: fix this thing
-            /*
             free(fromError);
             free(toError);
-            */
         }
 
         free(timestampTo);
