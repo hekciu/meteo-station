@@ -38,7 +38,7 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
             } else {
                 char * content = NULL;
                 if (get_PMS5003_measurements((uint64_t)from, (uint64_t)to, &content) == 0) {
-                    responseSize = build_response(response, "found some shiet\n");
+                    responseSize = build_response(response, content);
                     free(content);
                 } else {
                     responseSize = build_response_internal_server_error(response, "error with database connection\n");
