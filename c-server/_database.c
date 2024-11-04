@@ -110,7 +110,6 @@ int _createPMS5003TupleJson(PGresult * res, int nRow, char ** output) {
 
     for (int i = 0; i < PQnfields(res); i++) {
         char * fieldName = PQfname(res, i); 
-        printf("fieldName: %s\n", fieldName);
         if (strcmp(DEVICE_TIMESTAMP_FN, fieldName) == 0) {
             deviceTimestamp = (uint64_t)strtoll(PQgetvalue(res, nRow, i), NULL, 10);
         } else if (strcmp(DEVICE_NAME_FN, fieldName) == 0) {

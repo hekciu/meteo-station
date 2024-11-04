@@ -14,19 +14,34 @@ uint64_t jsonArrayFromStrings(char ** output, char * input) {
     uint64_t outputLen;
 
     if (*output == NULL && input != NULL) {
-        outputLen = strlen(input) + 4;
+        outputLen = strlen(input) + 3 + 1;
         
         *output = malloc(outputLen);
         snprintf(*output, outputLen, "[\"%s\"", input);
     } else if (*output != NULL && input != NULL) {
-        uint64_t newContentLen = strlen(input) + 4;
-        outputLen = strlen(*output) + newContentLen;
+        outputLen = strlen(*output) + strlen(input) + 4 + 1;
 
-        realloc(*output, newContentLen);
-        snprintf(*output + strlen(*output), newContentLen, ",\"%s\"", input);
+        char * tmp = malloc(strlen(*output) + 1);
+        *(tmp + strlen(*output)) = '\0';
+        memcpy(tmp, *output, strlen(*output));
+        free(*output);
+        *output = malloc(outputLen);
+
+        snprintf(*output, outputLen, "%s,\"%s\"", tmp, input);
+
+        free(tmp);
     } else if (input == NULL) {
-        realloc(*output, 2);
-        snprintf(*output + strlen(*output), 2, "]");
+        outputLen = strlen(*output) + 2;
+
+        char * tmp = malloc(strlen(*output) + 1);
+        memcpy(tmp, *output, strlen(*output));
+        *(tmp + strlen(*output)) = '\0';
+        free(*output);
+        *output = malloc(outputLen);
+
+        snprintf(*output, outputLen, "%s]", tmp);
+
+        free(tmp);
     }
 
     return outputLen;

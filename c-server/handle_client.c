@@ -29,7 +29,7 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
         } else {
             char * fromError = malloc(strlen(timestampFrom) + 1);
             char * toError = malloc(strlen(timestampTo) + 1);
-            int64_t from = strtoll(timestampFrom, &fromError, 10);
+            int64_t from = strtoll(timestampFrom, &fromError, 10); // fromError and toError should not be freed
             int64_t to = strtoll(timestampTo, &toError, 10);
             if (strlen(fromError) != 0 || strlen(toError) != 0) {
                 char * text = "timestampTo and timestampFrom need to be valid integers";
@@ -44,9 +44,6 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
                     responseSize = build_response_internal_server_error(response, "error with database connection\n");
                 }
             }
-
-            free(fromError);
-            free(toError);
         }
 
         free(timestampTo);

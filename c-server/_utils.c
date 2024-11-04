@@ -141,7 +141,7 @@ int extract_query_param(char * endpoint, char * paramName, char ** output) {
     int paramNameLen = strlen(paramName);
 
     int paramNamePatternLen = paramNameLen + 1;
-    char * paramNamePattern = malloc(paramNameLen + 1);
+    char * paramNamePattern = malloc(paramNamePatternLen + 1);
     sprintf(paramNamePattern, "%s=", paramName);
 
     bool foundFirstParam = false;
