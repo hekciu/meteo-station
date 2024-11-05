@@ -8,6 +8,7 @@
 #include "_utils.h"
 #include "_database.h"
 #include "auth.h"
+#include "_parse.h"
 
 #define BUFFER_SIZE 4096
 
@@ -21,7 +22,7 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
         if (extract_query_param(endpointStr, "timestampFrom", &timestampFrom) != 0) {
             fprintf(stderr, "Missing timestampFrom param\n"); 
             timestampFrom = malloc(0);
-            responseSize = build_response_bad_request(response, "missing timestampFrom query param"); 
+            responseSize = build_response_bad_request(response, "missing timestampfrom query param"); 
         } else if (extract_query_param(endpointStr, "timestampTo", &timestampTo) != 0) {
             fprintf(stderr, "Missing timestampTo param\n"); 
             timestampTo = malloc(0);
@@ -58,13 +59,25 @@ size_t _handle_get_request(char * endpointStr, int authResult, char ** response)
 size_t _handle_post_request(char * endpointStr, int authResult, char * requestBody, char ** response) {
     size_t responseSize;
 
-    if (strcmp(endpointStr, "/data") == 0) {
+    if (strcmp(endpointStr, "/measurements/PMS5003") == 0) {
         if (authResult != 0) {
             fprintf(stderr, "auth failed\n");
             responseSize = build_response_unauthorized(response);
         } else {
             printf("client authorized successfully\n"); 
-            responseSize = build_response(response, NULL);
+            uint64_t device_timestamp;
+            char * device_name;
+            uint16_t pm10_standard;
+            uint16_t pm25_standard;
+            uint16_t pm100_standard;
+            if (parseInsertPMS5003Body(requestBody, &device_timestamp, &device_name, &pm10_standard, &pm25_standard, &pm100_standard) == 0) {
+                int insertStatus = insert_PMS5003_measurement(device_timestamp, device_name, pm10_standard, pm25_standard, pm100_standard);
+                responseSize = insertStatus == 0 ? build_response(response, "OK") : build_response_internal_server_error(response, "database error\n");
+            } else {
+                responseSize = build_response_bad_request(response, "could not parse PMS5003 data body\n"); 
+            }
+
+            free(device_name); 
         }
     } else {
         printf("not found\n");

@@ -6,9 +6,16 @@
 #include "_database.h"
 #include "postgresql/libpq-fe.h"
 #include "../common/json_array_from_anything.h"
+#include "_parse.h"
 
 
 #define PMS5003_JSON_MAX_SIZE 1024
+
+const char * DEVICE_TIMESTAMP_FN = "device_timestamp";
+const char * DEVICE_NAME_FN = "device_name";
+const char * PM10_STANDARD_FN = "pm10_standard";
+const char * PM25_STANDARD_FN = "pm25_standard";
+const char * PM100_STANDARD_FN = "pm100_standard";
 
 
 void _createConnInfoFromEnvs(char ** output) {
@@ -96,12 +103,6 @@ int _extract_tuples(PGresult * res, int (*createTupleJson)(PGresult * res, int n
 
 
 int _createPMS5003TupleJson(PGresult * res, int nRow, char ** output) {
-    const char * DEVICE_TIMESTAMP_FN = "device_timestamp";      
-    const char * DEVICE_NAME_FN = "device_name"; 
-    const char * PM10_STANDARD_FN = "pm10_standard";
-    const char * PM25_STANDARD_FN = "pm25_standard";
-    const char * PM100_STANDARD_FN = "pm100_standard";
-
     uint64_t deviceTimestamp; 
     char * deviceName = NULL; 
     uint16_t pm10Standard;
@@ -126,7 +127,7 @@ int _createPMS5003TupleJson(PGresult * res, int nRow, char ** output) {
         }
     }
 
-    const char * dataFormat = "{ \"%s\": \"%lld\", \"%s\": \"%s\", \"%s\": \"%d\", \"%s\": \"%d\", \"%s\": \"%d\" }";
+    const char * dataFormat = "{ \"%s\": %lld, \"%s\": \"%s\", \"%s\": %d, \"%s\": %d, \"%s\": %d }";
     char * json = malloc(PMS5003_JSON_MAX_SIZE);
 
     snprintf(json,
@@ -171,6 +172,7 @@ int get_PMS5003_measurements(uint64_t timestampFrom, uint64_t timestampTo, char 
     
     char * query = malloc(MAX_PG_QUERY_SIZE);
     snprintf(query, MAX_PG_QUERY_SIZE, "SELECT * FROM pms5003_measurements WHERE device_timestamp > to_timestamp(%ld) and device_timestamp < to_timestamp(%ld)", timestampFrom, timestampTo);
+    printf("Querying database: %s\n", query);
     res = PQexec(conn, query);
 
     _extract_tuples(res,  _createPMS5003TupleJson, output);
@@ -180,6 +182,47 @@ int get_PMS5003_measurements(uint64_t timestampFrom, uint64_t timestampTo, char 
 }
 
 
-int insert_PMS5003_measurement(char * tableName, char * data) {
+int insert_PMS5003_measurement(uint64_t device_timestamp, char * device_name, uint16_t pm10_standard, uint16_t pm25_standard, uint16_t pm100_standard) {
+    char * conninfo;
+    PGconn * conn;
+    PGresult * res;
+
+    _createConnInfoFromEnvs(&conninfo);
+
+    conn = PQconnectdb(conninfo);
+    free(conninfo);
+
+    if (PQstatus(conn) != CONNECTION_OK) {
+        fprintf(stderr, "connection error: %s", PQerrorMessage(conn));
+        PQfinish(conn);
+        return 1;
+    }
+
     
+    char * query = malloc(MAX_PG_QUERY_SIZE);
+    snprintf(query, MAX_PG_QUERY_SIZE, "INSERT INTO pms5003_measurements(%s, %s, %s, %s, %s) VALUES(to_timestamp(%ld), %s, %d, %d, %d)",
+        DEVICE_TIMESTAMP_FN,
+        DEVICE_NAME_FN,
+        PM10_STANDARD_FN,
+        PM25_STANDARD_FN,
+        PM100_STANDARD_FN,
+        device_timestamp,
+        device_name,
+        pm10_standard,
+        pm25_standard,
+        pm100_standard);
+    printf("Querying database: %s\n", query);
+
+    res = PQexec(conn, query);
+    free(query);
+
+    
+    ExecStatusType execStatus = PQresultStatus(res);
+    if (execStatus ==  PGRES_COMMAND_OK) {
+        printf("Inserted data correctly\n"); 
+        return 0;
+    } else {
+        fprintf(stderr, "Error: got %d status from database\n", execStatus);
+        return 1;
+    }
 }
