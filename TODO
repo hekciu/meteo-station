@@ -1,0 +1,9 @@
+c-server/_parse.c:11:// TODO: maybe write some custom error messages to the response?
+c-server/_parse.c:12:// TODO: create proper url decoding: https://www.ietf.org/rfc/rfc3986.txt
+c-server/_parse.c:13:// TODO: write generic function for parsing url-encoded data (with callback)
+c-server/_utils.c:19:    return (size_t)lengthWithoutNull; // TODO this conversion does not make sense, maybe switch to int
+c-server/_utils.c:34:    return (size_t)lengthWithoutNull;  // TODO this conversion does not make sense, maybe switch to int   
+c-server/_utils.c:48:    return (size_t)lengthWithoutNull;  // TODO this conversion does not make sense, maybe switch to int   
+c-server/_utils.c:62:    return (size_t)lengthWithoutNull; // TODO this conversion does not make sense, maybe switch to int 
+c-server/_utils.c:76:    return (size_t)lengthWithoutNull;// TODO this conversion does not make sense, maybe switch to int
+device/main.c:135:    // TODO: add requirement for max 20 characters in device name as it's the max one in db

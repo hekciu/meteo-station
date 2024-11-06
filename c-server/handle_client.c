@@ -63,6 +63,15 @@ size_t _handle_post_request(char * endpointStr, int authResult, char * requestBo
         if (authResult != 0) {
             fprintf(stderr, "auth failed\n");
             responseSize = build_response_unauthorized(response);
+
+            // TEST 
+            uint64_t device_timestamp;
+            char * device_name;
+            uint16_t pm10_standard;
+            uint16_t pm25_standard;
+            uint16_t pm100_standard;
+            parseInsertPMS5003Body(requestBody, &device_timestamp, &device_name, &pm10_standard, &pm25_standard, &pm100_standard);
+            // KONIEC TESTU
         } else {
             printf("client authorized successfully\n"); 
             uint64_t device_timestamp;
