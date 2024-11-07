@@ -13,8 +13,8 @@ size_t base64_encode(char * input, char ** output) {
 
     int numBits = strlen(input) * 8;
     int outputBits = numBits + (numBits % 24 == 0 ? 0 : 24 - numBits % 24);
-    size_t outputSize = outputBits / 8;
-    *output = malloc(outputSize);
+    size_t outputSize = outputBits / 6;
+    *output = malloc(outputSize + 1);
 
     int numCurrBit = 0;
     int numCurrOutChar = 0;
@@ -45,6 +45,8 @@ size_t base64_encode(char * input, char ** output) {
         *(* output + numCurrOutChar) = PAD;
         numCurrOutChar++;
     }
+
+    *(*output + outputSize) = '\0'; 
     
     return outputSize;
 }

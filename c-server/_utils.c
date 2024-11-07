@@ -77,6 +77,7 @@ size_t build_response(char ** response, char * content) {
 }
 
 
+// TODO: ensure that we extract ONLY headers not for example body part that matches
 int extract_header(char * reqContent, char * headerName, char ** output) {
     if(*output != NULL) {
         free(*output);

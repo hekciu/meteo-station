@@ -27,15 +27,17 @@ int parseInsertPMS5003Body(char * body, uint64_t * device_timestamp, char ** dev
         fprintf(stderr, "input body exceeded parse buffer size\n");
         free(currentParamNameBuffer);
         free(currentParamBuffer);
+        free(errorBuffer);
+        return 1;
     }
 
 
     for (int n = 0; n <= inputSize; n++) {
-        char charAtN = *(body + n);
-        
+        char charAtN = *(body + n); // At n == inputSize this will be \0
+
         if (charAtN == '&' || n == inputSize) {
             isCurrentlyName = true;
-            *(currentParamBuffer + currentParamSize) = '\0';          
+            *(currentParamBuffer + currentParamSize) = '\0';
 
             if (strncmp(currentParamNameBuffer, DEVICE_TIMESTAMP_FN, currentParamNameSize) == 0) {
                 *device_timestamp = (uint64_t)strtoll(currentParamBuffer, &errorBuffer, 10);  
@@ -71,7 +73,7 @@ int parseInsertPMS5003Body(char * body, uint64_t * device_timestamp, char ** dev
 
         if (charAtN == '=') {
             isCurrentlyName = false;
-            *(currentParamNameBuffer + currentParamNameSize) = '\0';          
+            *(currentParamNameBuffer + currentParamNameSize) = '\0';
             currentParamNameSize = 0;
             continue;
         }
@@ -85,8 +87,9 @@ int parseInsertPMS5003Body(char * body, uint64_t * device_timestamp, char ** dev
         }
     }
 
-    free(currentParamBuffer);
-    free(currentParamNameBuffer);
+    // free(currentParamBuffer);
+    // free(currentParamNameBuffer);
+    free(errorBuffer);
 
     if (paramsFound != numParams) {
         output = 1;

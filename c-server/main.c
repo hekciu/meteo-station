@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <signal.h>
 
 #include "handle_client.h"
+
 
 int main(int argc, char ** argv) {
     char * port_env = getenv("PORT");
@@ -39,6 +41,12 @@ int main(int argc, char ** argv) {
 		perror("listen failed");
 		return 1;
 	}
+
+    void _handleSIGINT() {
+        shutdown(server_fd, 2);
+        exit(0);
+    }
+    signal(SIGINT, _handleSIGINT); 
 
 	for(;;) {
 		struct sockaddr_in client_addr;
