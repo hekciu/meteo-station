@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include "_database.h"
 #include "postgresql/libpq-fe.h"
 #include "../common/json_array_from_anything.h"
@@ -112,6 +113,11 @@ int _createPMS5003TupleJson(PGresult * res, int nRow, char ** output) {
     for (int i = 0; i < PQnfields(res); i++) {
         char * fieldName = PQfname(res, i); 
         if (strcmp(DEVICE_TIMESTAMP_FN, fieldName) == 0) {
+            char * measurementDate = PQgetvalue(res, nRow, i);
+            // this is basically a thing to do: https://stackoverflow.com/questions/2040425/postgresql-sql-timestamp-to-unix-timestamp-using-libpq
+            time_t timestamp;
+            strptime(date, "%Y-%m-%d %H:%M:%S", &timestamp);
+            printf("timestamp value: %s\n", PQgetvalue(res, nRow, i));
             deviceTimestamp = (uint64_t)strtoll(PQgetvalue(res, nRow, i), NULL, 10);
         } else if (strcmp(DEVICE_NAME_FN, fieldName) == 0) {
             deviceName = PQgetvalue(res, nRow, i);

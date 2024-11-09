@@ -38,24 +38,25 @@ int parseInsertPMS5003Body(char * body, uint64_t * device_timestamp, char ** dev
         if (charAtN == '&' || n == inputSize) {
             isCurrentlyName = true;
             *(currentParamBuffer + currentParamSize) = '\0';
-            printf("found param: %s, value: %s\n", currentParamNameBuffer, currentParamBuffer);
 
             if (strncmp(currentParamNameBuffer, DEVICE_TIMESTAMP_FN, currentParamNameSize) == 0) {
                 *device_timestamp = (uint64_t)strtoll(currentParamBuffer, &errorBuffer, 10);  
                 paramsFound++;
-            } else if (strncmp(currentParamNameBuffer, DEVICE_NAME_FN, currentParamSize) == 0) {
+            } else if (strncmp(currentParamNameBuffer, DEVICE_NAME_FN, currentParamNameSize) == 0) {
                 *device_name = malloc(currentParamSize + 1);
                 memcpy(*device_name, currentParamBuffer, currentParamSize);
                 *(*device_name + currentParamSize) = '\0';
                 paramsFound++;
-            } else if (strncmp(currentParamNameBuffer, PM10_STANDARD_FN, currentParamSize) == 0) {
+            } else if (strncmp(currentParamNameBuffer, PM10_STANDARD_FN, currentParamNameSize) == 0) {
                 *pm10_standard = (uint16_t)strtol(currentParamBuffer, &errorBuffer, 10);
                 paramsFound++;
-            } else if (strncmp(currentParamNameBuffer, PM25_STANDARD_FN, currentParamSize) == 0) {
+            } else if (strncmp(currentParamNameBuffer, PM25_STANDARD_FN, currentParamNameSize) == 0) {
                 *pm25_standard = (uint16_t)strtol(currentParamBuffer, &errorBuffer, 10);
+                printf("pm25_standard: %d\n", *pm25_standard);
                 paramsFound++;
-            } else if (strncmp(currentParamNameBuffer, PM100_STANDARD_FN, currentParamSize) == 0) {
+            } else if (strncmp(currentParamNameBuffer, PM100_STANDARD_FN, currentParamNameSize) == 0) {
                 *pm100_standard = (uint16_t)strtol(currentParamBuffer, &errorBuffer, 10);
+                printf("pm100_standard: %d\n", *pm100_standard);
                 paramsFound++;
             } else {
                 fprintf(stderr, "unsupported param in PMS5003 data: %s\n", currentParamNameBuffer);
