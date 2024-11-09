@@ -200,7 +200,7 @@ int insert_PMS5003_measurement(uint64_t device_timestamp, char * device_name, ui
 
     
     char * query = malloc(MAX_PG_QUERY_SIZE);
-    snprintf(query, MAX_PG_QUERY_SIZE, "INSERT INTO pms5003_measurements(%s, %s, %s, %s, %s) VALUES(to_timestamp(%ld), %s, %d, %d, %d)",
+    snprintf(query, MAX_PG_QUERY_SIZE, "INSERT INTO pms5003_measurements(%s, %s, %s, %s, %s) VALUES(to_timestamp(%ld), '%s', %d, %d, %d)",
         DEVICE_TIMESTAMP_FN,
         DEVICE_NAME_FN,
         PM10_STANDARD_FN,

@@ -43,6 +43,7 @@ int main(int argc, char ** argv) {
 	}
 
     void _handleSIGINT() {
+        printf("got SIGINT, shutting down socket\n");
         shutdown(server_fd, 2);
         exit(0);
     }

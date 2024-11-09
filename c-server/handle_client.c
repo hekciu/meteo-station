@@ -73,11 +73,11 @@ size_t _handle_post_request(char * endpointStr, int authResult, char * requestBo
             if (parseInsertPMS5003Body(requestBody, &device_timestamp, &device_name, &pm10_standard, &pm25_standard, &pm100_standard) == 0) {
                 int insertStatus = insert_PMS5003_measurement(device_timestamp, device_name, pm10_standard, pm25_standard, pm100_standard);
                 responseSize = insertStatus == 0 ? build_response(response, "OK") : build_response_internal_server_error(response, "database error\n");
+
+                free(device_name);
             } else {
                 responseSize = build_response_bad_request(response, "could not parse PMS5003 data body\n"); 
             }
-
-            free(device_name); 
         }
     } else {
         printf("not found\n");

@@ -38,6 +38,7 @@ int parseInsertPMS5003Body(char * body, uint64_t * device_timestamp, char ** dev
         if (charAtN == '&' || n == inputSize) {
             isCurrentlyName = true;
             *(currentParamBuffer + currentParamSize) = '\0';
+            printf("found param: %s, value: %s\n", currentParamNameBuffer, currentParamBuffer);
 
             if (strncmp(currentParamNameBuffer, DEVICE_TIMESTAMP_FN, currentParamNameSize) == 0) {
                 *device_timestamp = (uint64_t)strtoll(currentParamBuffer, &errorBuffer, 10);  
@@ -62,19 +63,14 @@ int parseInsertPMS5003Body(char * body, uint64_t * device_timestamp, char ** dev
                 break;
             }
 
-            if (strlen(errorBuffer) != 0) {
-                output = 1;
-                break;
-            } 
-
             currentParamSize = 0;
+            currentParamNameSize = 0;
             continue; 
         }
 
         if (charAtN == '=') {
             isCurrentlyName = false;
             *(currentParamNameBuffer + currentParamNameSize) = '\0';
-            currentParamNameSize = 0;
             continue;
         }
 
@@ -87,9 +83,13 @@ int parseInsertPMS5003Body(char * body, uint64_t * device_timestamp, char ** dev
         }
     }
 
-    // free(currentParamBuffer);
-    // free(currentParamNameBuffer);
-    free(errorBuffer);
+    if (strlen(errorBuffer) != 0) {
+        output = 1;
+    } 
+
+    free(currentParamBuffer);
+    free(currentParamNameBuffer);
+    // free(errorBuffer);
 
     if (paramsFound != numParams) {
         output = 1;
