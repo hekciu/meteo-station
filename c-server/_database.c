@@ -72,6 +72,7 @@ int _extract_tuples(PGresult * res, int (*createTupleJson)(PGresult * res, int n
         break;
     case PGRES_TUPLES_OK:
     case PGRES_SINGLE_TUPLE:
+        ;
         bool returnEmpty = false;
 
         if (PQntuples(res) == 0) {
