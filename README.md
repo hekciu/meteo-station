@@ -2,7 +2,7 @@
 I'm building small raspberrypi-based meteorology station integrated with server app to store and serve measurements
 
 # current goals -> 
-- rewrite server app from typescript to C (using POSIX socket interface and libpq)
+- resolve bunch fo TODOS related to security and stuff
 - add support for DS18B20 temperature sensor
 
 ## Configuring database for server app
@@ -21,19 +21,18 @@ I'm building small raspberrypi-based meteorology station integrated with server 
 ### fill env.sh with values
 source update_database.sh
 
-## Starting c server app:
+## Starting server app(server/):
 - sudo apt install libpq-dev
+- cp env.sh.template env.sh
+### fill env.sh with values
+- ./run.sh
 
-## Starting nodejs server app:
-- cp .env.template .env
-### fill .env with values
-- npm install
-- npm run start
+## Starting nodejs server app(legacy/server/):
+### Do not do it, it's legacy, inside legacy/, it does not work etc
 
-## Building and starting app on raspberrypi:
+## Building and starting app on raspberrypi(device/):
 - sudo apt-get install libcurl4-openssl-dev
 ### install pigpio library if it's not present on your machine(but it should be I guess)
-- cd device
 - cp env.sh.template env.sh
 ### fill env.sh with values
 - sudo bash run.sh
