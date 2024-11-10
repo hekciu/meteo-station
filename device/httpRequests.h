@@ -51,7 +51,7 @@ size_t ReadMemoryCallback(char * ptr, size_t size, size_t nmemb, void * userdata
 	return dataSize;
 }
 
-bool postJsonData(char * url, char * data, char * authHeader) {
+bool postData(char * url, char * data, char * authHeader, char * contentType) {
 	CURL * curl_handle;
 	CURLcode res;
 
@@ -68,7 +68,10 @@ bool postJsonData(char * url, char * data, char * authHeader) {
 	inputData.itr = 0;
 
 	struct curl_slist * headers = NULL;
-	headers = curl_slist_append(headers, "Content-Type: application/json");
+    const char * contentTypeHeaderFormat = "Content-Type: %s";
+    char * contentTypeHeader = malloc(strlen(contentTypeHeaderFormat) + strlen(contentType) -1 + 1);
+    sprintf(contentTypeHeader, contentTypeHeaderFormat, contentType);
+	headers = curl_slist_append(headers, contentTypeHeader);
 	if (authHeader != NULL) {
 		char * authString = "Authorization: ";
 		size_t headerStringSize = strlen(authString) + strlen(authHeader) + 1;
@@ -79,6 +82,7 @@ bool postJsonData(char * url, char * data, char * authHeader) {
 		headers = curl_slist_append(headers, authHeaderString);
 		free(authHeaderString);
 	}
+
 	if (!headers) {
 		free(inputData.memory);
 		return false;

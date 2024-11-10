@@ -137,6 +137,7 @@ void * handle_client(void * arg) {
             char * authHeaderContent = NULL;
             int authResult = extract_header(buffer, "Authorization", &authHeaderContent) == 0 ? auth(authHeaderContent) : -1;
 
+            // TODO: add check for Content-Type header
             size_t responseSize = _handle_post_request(endpointStr, authResult, requestBody, &response); 
 
             free(endpointStr);

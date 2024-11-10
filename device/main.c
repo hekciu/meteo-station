@@ -33,10 +33,10 @@ struct Data {
 	struct PmsData pmsData;
 };
 
-size_t createPMS5003DataJson(struct Data * data, char * output, char * deviceName) {
+size_t createPMS5003Data(struct Data * data, char * output, char * deviceName) {
 	uint32_t timestamp = get_current_timestamp();
 
-	size_t size = snprintf(output, MAX_OUTPUT_DATA_LENGTH, "{ \"dataType\": \"PMS5003\", \"data\": { \"pm10_standard\": %hu, \"pm25_standard\": %hu, \"pm100_standard\": %hu, \"device_name\": \"%s\", \"device_timestamp\": %d }  }", data->pmsData.pm10_standard, data->pmsData.pm25_standard, data->pmsData.pm100_standard, deviceName, timestamp);	
+	size_t size = snprintf(output, MAX_OUTPUT_DATA_LENGTH, "device_name=%s&device_timestamp=%d&pm10_standard=%hu&pm25_standard=%hu&pm100_standard=%hu", deviceName, timestamp, data->pmsData.pm10_standard, data->pmsData.pm25_standard, data->pmsData.pm100_standard);	
 
 	return size;
 }
@@ -147,11 +147,11 @@ int main(int argc, char * argv[]) {
 		if(readPMSData(&data)) {
 			printf("data %d %d %d\n", data.pmsData.pm10_standard, data.pmsData.pm25_standard, data.pmsData.pm100_standard);
 
-			printf("creating data json\n");
+			printf("creating data structure\n");
 			char * output = malloc(MAX_OUTPUT_DATA_LENGTH);
-			size_t outputSize = createPMS5003DataJson(&data, output, deviceName);
+			size_t outputSize = createPMS5003Data(&data, output, deviceName);
 			printf("sending data to server\n");
-			if(postJsonData(serverUrl, output, serverAuthEncoded)) {
+			if(postData(serverUrl, output, serverAuthEncoded, "application/x-www-form-urlencoded")) {
 				printf("success!!\n");
 			} else {
 				printf("failure\n");
