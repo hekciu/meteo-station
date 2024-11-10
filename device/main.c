@@ -150,6 +150,7 @@ int main(int argc, char * argv[]) {
 			printf("creating data structure\n");
 			char * output = malloc(MAX_OUTPUT_DATA_LENGTH);
 			size_t outputSize = createPMS5003Data(&data, output, deviceName);
+			printf("createdData: %s\n", output);
 			printf("sending data to server\n");
 			if(postData(serverUrl, output, serverAuthEncoded, "application/x-www-form-urlencoded")) {
 				printf("success!!\n");
@@ -159,7 +160,7 @@ int main(int argc, char * argv[]) {
 
 			free(output);
 		}	
-		sleep(5);
+		sleep(30);
 	}
 	
 

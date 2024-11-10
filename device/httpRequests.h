@@ -61,11 +61,14 @@ bool postData(char * url, char * data, char * authHeader, char * contentType) {
 		return false;
 	}
 
+	// reading memory by chunks is disabled by now, POSTFIELDS is more than enough for around 100 characters
+	/*
 	struct MemoryStruct inputData;
 	inputData.size = strlen(data);
 	inputData.memory = malloc(inputData.size);
 	memcpy(inputData.memory, data, inputData.size);
 	inputData.itr = 0;
+	*/
 
 	struct curl_slist * headers = NULL;
     const char * contentTypeHeaderFormat = "Content-Type: %s";
@@ -84,26 +87,36 @@ bool postData(char * url, char * data, char * authHeader, char * contentType) {
 	}
 
 	if (!headers) {
+		/*
 		free(inputData.memory);
+		*/
 		return false;
 	}
 
+	curl_easy_setopt(curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
 	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1);
+	/*
 	curl_easy_setopt(curl_handle, CURLOPT_READFUNCTION, ReadMemoryCallback);
 	curl_easy_setopt(curl_handle, CURLOPT_READDATA, (void*)&inputData);
+	*/
+	curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, data);
 	curl_easy_setopt(curl_handle, CURLOPT_POST, 1);
-	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "meteo-station-edge/1.0.0");
+	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "meteo-station-edge/0.2.0");
 	curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
 
 	res = curl_easy_perform(curl_handle);
 
 	curl_slist_free_all(headers);
 	curl_easy_cleanup(curl_handle);
+	/*
 	free(inputData.memory);
+	*/
 
 	if (res == CURLE_OK) {
 		return true;
+	} else {
+		fprintf(stderr, "error, got curl code: %d\n", res);
 	}
 
 	return false;
