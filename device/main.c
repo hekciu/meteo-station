@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "httpRequests.h"
+#include "config.h"
 #include "../common/get_current_timestamp.h"
 
 #define PMS_5003_BAUD 9600
@@ -160,7 +161,7 @@ int main(int argc, char * argv[]) {
 
 			free(output);
 		}	
-		sleep(30);
+		sleep(MEASUREMENTS_INTERVAL_SEC);
 	}
 	
 
