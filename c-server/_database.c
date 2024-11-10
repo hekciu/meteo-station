@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE /* This is needed to stop gcc complaining about strptime function */
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +13,8 @@
 
 
 #define PMS5003_JSON_MAX_SIZE 1024
+#define PG_TIMESTAMP_MAX_SIZE 19
+#define EPOCH_MAX_SIZE 10
 
 const char * DEVICE_TIMESTAMP_FN = "device_timestamp";
 const char * DEVICE_NAME_FN = "device_name";
@@ -114,11 +118,11 @@ int _createPMS5003TupleJson(PGresult * res, int nRow, char ** output) {
         char * fieldName = PQfname(res, i); 
         if (strcmp(DEVICE_TIMESTAMP_FN, fieldName) == 0) {
             char * measurementDate = PQgetvalue(res, nRow, i);
-            // this is basically a thing to do: https://stackoverflow.com/questions/2040425/postgresql-sql-timestamp-to-unix-timestamp-using-libpq
-            time_t timestamp;
-            strptime(date, "%Y-%m-%d %H:%M:%S", &timestamp);
-            printf("timestamp value: %s\n", PQgetvalue(res, nRow, i));
-            deviceTimestamp = (uint64_t)strtoll(PQgetvalue(res, nRow, i), NULL, 10);
+            struct tm measurementTime = {};
+            strptime(measurementDate, "%Y-%m-%d %H:%M:%S", &measurementTime);
+            measurementTime.tm_hour += 1; //TODO: This is a WORKAROUND I don't know why it works that way
+            time_t epoch = mktime(&measurementTime);
+            deviceTimestamp = (uint64_t)epoch;
         } else if (strcmp(DEVICE_NAME_FN, fieldName) == 0) {
             deviceName = PQgetvalue(res, nRow, i);
         } else if (strcmp(PM10_STANDARD_FN, fieldName) == 0) {
