@@ -58,13 +58,17 @@ void test() {
 bool readPMSData(struct Data * data) {
 	struct PmsData pmsData = { 1, 2, 3 };
 	int serialHandle = serOpen("/dev/serial0", PMS_5003_BAUD, 0);
+
 	if (serialHandle < 0) {
 		printf("opening serial connection failed with %d code\n", serialHandle);
 		return false;
 	}
 
-	while (1) {
+	int antiInf = 0;
+
+	while (antiInf < 20) {
 		sleep(1);
+		antiInf++;
 		int bytesAvailable = serDataAvailable(serialHandle);
 	
 		if (bytesAvailable == 0) {
