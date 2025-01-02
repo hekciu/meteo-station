@@ -1,9 +1,11 @@
 # meteo-station
 I'm building small raspberrypi-based meteorology station integrated with server app to store and serve measurements
 
-# current goals -> 
+# current goals ->
+- write better http parser at server (parse once, return one struct)
+- write own http implementation at client (instead of curl)
 - resolve bunch fo TODOS related to security and stuff
-- add support for DS18B20 temperature sensor
+- add support for DHT22 temperature sensor
 
 ## Configuring database for server app
 - sudo apt install postgresql # at least 9.1 is needed
