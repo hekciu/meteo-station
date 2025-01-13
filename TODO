@@ -10,5 +10,5 @@ server/_utils.c:48:    return (size_t)lengthWithoutNull;  // TODO this conversio
 server/_utils.c:62:    return (size_t)lengthWithoutNull; // TODO this conversion does not make sense, maybe switch to int 
 server/_utils.c:76:    return (size_t)lengthWithoutNull;// TODO this conversion does not make sense, maybe switch to int
 server/_utils.c:80:// TODO: ensure that we extract ONLY headers not for example body part that matches
-device/main.c:140:    // TODO: add requirement for max 20 characters in device name as it's the max one in db
+device/main.c:27:    // TODO: add requirement for max 20 characters in device name as it's the max one in db
 device/env.sh.template:9:# TODO: make this auth via common/base64_* functions
