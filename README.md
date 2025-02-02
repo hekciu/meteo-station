@@ -2,10 +2,13 @@
 I'm building small raspberrypi-based meteorology station integrated with server app to store and serve measurements
 
 # current goals ->
+- rewrite device app from raspi pi zero (unix/raspbian) to raspi pico(freertos with official sdk)
+- add support for DHT22 temperature sensor
+- rewrite server app from C to C++ with libwebdev library
+### kinda obsolete goals regarding new ones above
+- resolve bunch fo TODOS related to security and stuff
 - write better http parser at server (parse once, return one struct)
 - write own http implementation at client (instead of curl)
-- resolve bunch fo TODOS related to security and stuff
-- add support for DHT22 temperature sensor
 
 ## Configuring database for server app
 - sudo apt install postgresql # at least 9.1 is needed
