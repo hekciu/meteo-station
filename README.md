@@ -2,6 +2,8 @@
 I'm building small raspberrypi-based meteorology station integrated with server app to store and serve measurements
 
 # current goals ->
+
+- use this: https://www.cytron.io/tutorial/program-raspberry-pi-zero-2-w-without-os
 - rewrite device app from raspi pi zero (unix/raspbian) to raspi pico(freertos with official sdk)
 - add support for DHT22 temperature sensor
 - rewrite server app from C to C++ with libwebdev library
