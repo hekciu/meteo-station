@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gccgo main.go -o server
+go build -o server main.go
