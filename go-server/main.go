@@ -7,13 +7,10 @@ import (
 	"net/http"
 	"os"
     "database/sql"
+    _ "github.com/lib/pq"
 )
 
 
-func getMeasurements(w http.ResponseWriter, r *http.Request) {
-    fmt.Printf("got /measurements request\n")
-    io.WriteString(w, "Hello, HTTP!\n")
-}
 
 
 func main() {
@@ -44,17 +41,41 @@ func main() {
         }
     }
 
-    http.HandleFunc("/measurements", getMeasurements);
+	connString := fmt.Sprintf("user=%s dbname=%s port=%s password=%s host=%s", pgUser, pgDbname, pgPort, pgPassword, pgHost)
 
-	connStr := "user=pqgotest dbname=pqgotest sslmode=verify-full"
-	_, db_err := sql.Open("postgres", connStr)
+	db, db_err := sql.Open("postgres", connString)
 
 	if db_err != nil {
-        fmt.Printf("could not connect to the database, got: %s\n", db_err)
+        fmt.Printf("could not create database connection, got: %s\n", db_err)
         os.Exit(1)
-	} else {
-        fmt.Printf("Successfully connected to postgres database\n")
+	}
+
+    db_err = db.Ping()
+
+    if db_err != nil {
+        fmt.Printf("could not establish database connection, got: %s\n", db_err)
+        os.Exit(1)
     }
+
+    http.HandleFunc("/measurements", func (w http.ResponseWriter, r *http.Request) {
+        fmt.Printf("got /measurements request\n")
+
+        rows, err := db.Query("SELECT * FROM pms5003_measurements")
+
+        if err != nil {
+            io.WriteString(w, "database error!\n")
+        }
+
+        defer rows.Close()
+
+        output := ""
+
+        for rows.Next() {
+
+        }
+
+        io.WriteString(w, "Hello, HTTP!\n")
+    });
 
     server_err := http.ListenAndServe(":3333", nil)
 
