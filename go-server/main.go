@@ -2,15 +2,66 @@ package main
 
 import (
 	"errors"
+    "time"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
     "database/sql"
+    "encoding/json"
     _ "github.com/lib/pq"
 )
 
 
+type Pms5003Measurement struct {
+    Timestamp time.Time
+    DeviceName string
+    Pm10Standard uint8
+    Pm25Standard uint8
+    Pm100Standard uint8
+}
+
+
+func getMeasurements(w http.ResponseWriter, r *http.Request) {
+    if r->Method != "GET" {
+        io.WriteString(w, "method not supported\n")
+        return
+    }
+
+    fmt.Printf("got /measurements request\n")
+
+    rows, err := db.Query("SELECT * FROM pms5003_measurements")
+
+    if err != nil {
+        io.WriteString(w, "database error!\n")
+        return
+    }
+
+    defer rows.Close()
+
+    var output []Pms5003Measurement
+
+    for rows.Next() {
+        rowData :=  Pms5003Measurement{}
+
+        rows.Scan(&rowData.Timestamp,
+                    &rowData.DeviceName,
+                    &rowData.Pm10Standard,
+                    &rowData.Pm25Standard,
+                    &rowData.Pm100Standard)
+
+        output = append(output, rowData)
+    }
+
+    marshalled, err := json.Marshal(output)
+
+    if err != nil {
+        io.WriteString(w, "an error has occured\n")
+        return
+    }
+
+    io.WriteString(w, string(marshalled))
+}
 
 
 func main() {
@@ -57,25 +108,7 @@ func main() {
         os.Exit(1)
     }
 
-    http.HandleFunc("/measurements", func (w http.ResponseWriter, r *http.Request) {
-        fmt.Printf("got /measurements request\n")
-
-        rows, err := db.Query("SELECT * FROM pms5003_measurements")
-
-        if err != nil {
-            io.WriteString(w, "database error!\n")
-        }
-
-        defer rows.Close()
-
-        output := ""
-
-        for rows.Next() {
-
-        }
-
-        io.WriteString(w, "Hello, HTTP!\n")
-    });
+    http.HandleFunc("/measurements", getMeasurements);
 
     server_err := http.ListenAndServe(":3333", nil)
 
