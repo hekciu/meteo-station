@@ -13,12 +13,12 @@ import (
 )
 
 
-type Pms5003Measurement struct {
-    Timestamp time.Time
-    DeviceName string
-    Pm10Standard uint8
-    Pm25Standard uint8
-    Pm100Standard uint8
+type Pms5003MeasurementDTO struct {
+    DeviceTimestamp time.Time `json:"DeviceTimestamp"`
+    DeviceName string `json:"DeviceName"`
+    Pm10Standard uint8 `json:"Pm10Standard"`
+    Pm25Standard uint8 `json:"Pm25Standard"`
+    Pm100Standard uint8 `json:"Pm100Standard"`
 }
 
 
@@ -71,8 +71,7 @@ func _connectToDb() *sql.DB {
 
 
 func postMeasurements(w http.ResponseWriter, r * http.Request) {
-    fmt.Printf("POST /measurements\n")
-    var measurement Pms5003Measurement
+    fmt.Printf("POST /pms5003\n")
 
     if r.Body == nil {
         io.WriteString(w, "empty body\n")
@@ -81,19 +80,45 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
 
     decoder := json.NewDecoder(r.Body)
 
+    measurement := Pms5003MeasurementDTO{}
+
     err := decoder.Decode(&measurement)
 
     if err != nil {
         io.WriteString(w, "error parsing body\n")
         return
     }
+
+    db := _connectToDb()
+
+    query := fmt.Sprintf(`INSERT INTO pms5003_measurements(
+        device_timestamp, device_name, pm10_standard, pm25_standard, pm100_standard)
+        VALUES(to_timestamp(%d), '%s', %d, %d, %d)`,
+        measurement.DeviceTimestamp.Unix(),
+        measurement.DeviceName,
+        measurement.Pm10Standard,
+        measurement.Pm25Standard,
+        measurement.Pm100Standard)
+
+    fmt.Printf(query)
+
+    _, err = db.Query(query)
+
+    if err != nil {
+        io.WriteString(w, "database error\n")
+        return
+    }
+
+    io.WriteString(w, "Ok")
 }
 
 
 func getMeasurements(w http.ResponseWriter, r * http.Request) {
-    fmt.Printf("GET /measurements\n")
+    fmt.Printf("GET /pms5003\n")
 
     db := _connectToDb()
+
+    defer db.Close()
 
     if db == nil {
         io.WriteString(w, "database error!\n")
@@ -109,12 +134,12 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
 
     defer rows.Close()
 
-    var output []Pms5003Measurement
+    var output []Pms5003MeasurementDTO
 
     for rows.Next() {
-        rowData :=  Pms5003Measurement{}
+        rowData :=  Pms5003MeasurementDTO{}
 
-        rows.Scan(&rowData.Timestamp,
+        rows.Scan(&rowData.DeviceTimestamp,
                     &rowData.DeviceName,
                     &rowData.Pm10Standard,
                     &rowData.Pm25Standard,
@@ -131,11 +156,10 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
     }
 
     io.WriteString(w, string(marshalled))
-    db.Close()
 }
 
 
-func handleMeasurements(w http.ResponseWriter, r * http.Request) {
+func handlePms5003Measurements(w http.ResponseWriter, r * http.Request) {
     if r.Method == "GET" {
         getMeasurements(w, r)
     } else if r.Method == "POST" {
@@ -148,12 +172,14 @@ func handleMeasurements(w http.ResponseWriter, r * http.Request) {
 
 func main() {
 
-    http.HandleFunc("/measurements", handleMeasurements);
+    http.HandleFunc("/pms5003", handlePms5003Measurements);
 
+    fmt.Printf("starting server...\n")
     server_err := http.ListenAndServe(":3333", nil)
 
     if errors.Is(server_err, http.ErrServerClosed) {
         fmt.Printf("server closed\n");
+        os.Exit(1);
     } else if server_err != nil {
         fmt.Printf("error starting server: %s\n", server_err);
         os.Exit(1);

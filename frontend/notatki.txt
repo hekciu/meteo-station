@@ -1,0 +1,6 @@
+- przerobienie na pico
+- wysiwetlenie wykresow pm10/pm25/pm100 per stacja
+- trzymanie nazwa_stacji:lokalizacja
+- konfiguracja autoryzacja/host
+- wysiwetlenie lokalizacji na mapie
+- jakies informacje dla uzytkownika - powiadamianie o zagrozeniu
