@@ -9,6 +9,8 @@ import (
 	"os"
     "database/sql"
     "encoding/json"
+    "crypto/subtle"
+    "crypto/sha256"
     _ "github.com/lib/pq"
 )
 
@@ -23,9 +25,6 @@ type Pms5003MeasurementDTO struct {
 
 
 func _connectToDb() *sql.DB {
-    port := os.Getenv("PORT")
-    thisApiPassword := os.Getenv("THIS_API_PASSWORD")
-    thisApiUsername := os.Getenv("THIS_API_USERNAME")
     pgPort := os.Getenv("PG_PORT")
     pgHost := os.Getenv("PG_HOST")
     pgUser := os.Getenv("PG_USER")
@@ -33,9 +32,6 @@ func _connectToDb() *sql.DB {
     pgDbname := os.Getenv("PG_DBNAME")
 
     envs := [...]string{
-        port,
-        thisApiPassword,
-        thisApiUsername,
         pgPort,
         pgHost,
         pgUser,
@@ -45,7 +41,7 @@ func _connectToDb() *sql.DB {
 
     for _, el := range envs {
         if len(el) == 0 {
-            fmt.Printf("some environment variables are missing\n")
+            fmt.Fprint(os.Stderr, "some environment variables are missing\n")
             return nil
         }
     }
@@ -70,11 +66,50 @@ func _connectToDb() *sql.DB {
 }
 
 
+func _auth(r * http.Request) bool {
+    thisApiPassword := os.Getenv("THIS_API_PASSWORD")
+    thisApiUsername := os.Getenv("THIS_API_USERNAME")
+
+    envs := [...]string{
+        thisApiPassword,
+        thisApiUsername,
+    }
+
+    for _, el := range envs {
+        if len(el) == 0 {
+            fmt.Fprint(os.Stderr, "some environment variables are missing\n")
+            return false
+        }
+    }
+
+    username, password, ok := r.BasicAuth()
+
+    if !ok {
+        return false
+    }
+
+    usernameHash := sha256.Sum256([]byte(username))
+    passwordHash := sha256.Sum256([]byte(password))
+    usernameHashExpected := sha256.Sum256([]byte(thisApiUsername))
+    passwordHashExpected := sha256.Sum256([]byte(thisApiPassword))
+
+    usernameMatch := (subtle.ConstantTimeCompare(usernameHash[:], usernameHashExpected[:]) == 1)
+    passwordMatch := (subtle.ConstantTimeCompare(passwordHash[:], passwordHashExpected[:]) == 1)
+
+    return usernameMatch && passwordMatch
+}
+
+
 func postMeasurements(w http.ResponseWriter, r * http.Request) {
     fmt.Printf("POST /pms5003\n")
 
+    if (!_auth(r)) {
+        http.Error(w, "unauthorized\n", http.StatusUnauthorized)
+        return
+    }
+
     if r.Body == nil {
-        io.WriteString(w, "empty body\n")
+        http.Error(w, "empty body\n", http.StatusBadRequest)
         return
     }
 
@@ -85,11 +120,16 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
     err := decoder.Decode(&measurement)
 
     if err != nil {
-        io.WriteString(w, "error parsing body\n")
+        http.Error(w, "error parsing body\n", http.StatusBadRequest)
         return
     }
 
     db := _connectToDb()
+
+    if db == nil {
+        http.Error(w, "database error\n", http.StatusInternalServerError)
+        return
+    }
 
     query := fmt.Sprintf(`INSERT INTO pms5003_measurements(
         device_timestamp, device_name, pm10_standard, pm25_standard, pm100_standard)
@@ -100,12 +140,10 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
         measurement.Pm25Standard,
         measurement.Pm100Standard)
 
-    fmt.Printf(query)
-
     _, err = db.Query(query)
 
     if err != nil {
-        io.WriteString(w, "database error\n")
+        http.Error(w, "database error\n", http.StatusInternalServerError)
         return
     }
 
@@ -116,19 +154,24 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
 func getMeasurements(w http.ResponseWriter, r * http.Request) {
     fmt.Printf("GET /pms5003\n")
 
+    if (!_auth(r)) {
+        http.Error(w, "unauthorized\n", http.StatusUnauthorized)
+        return
+    }
+
     db := _connectToDb()
 
     defer db.Close()
 
     if db == nil {
-        io.WriteString(w, "database error!\n")
+        http.Error(w, "database error\n", http.StatusInternalServerError)
         return
     }
 
     rows, err := db.Query("SELECT * FROM pms5003_measurements")
 
     if err != nil {
-        io.WriteString(w, "database error!\n")
+        http.Error(w, "database error\n", http.StatusInternalServerError)
         return
     }
 
@@ -151,7 +194,7 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
     marshalled, err := json.Marshal(output)
 
     if err != nil {
-        io.WriteString(w, "an error has occured\n")
+        http.Error(w, "as error has occured\n", http.StatusInternalServerError)
         return
     }
 
