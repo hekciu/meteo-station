@@ -26,7 +26,8 @@ void app_main(void) {
         error_check(nvs_flash_init());
     }
 
-    error_check(initialize_network("dupa", "dupa"));
+    // ladne106 działa, aladne106 nie
+    error_check(initialize_network("", ""));
 
     // esp_err_t err = post_data("hello world!");
 }
