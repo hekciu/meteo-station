@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <esp_wifi_types_generic.h>
-#include "esp_http_client.h"
 #include "nvs_flash.h"
 
 #include "types.h"
 #include "network.h"
+#include "http_client.h"
 
 
 static void error_check(esp_err_t err) {
@@ -29,5 +29,5 @@ void app_main(void) {
     // ladne106 działa, aladne106 nie
     error_check(initialize_network("", ""));
 
-    // esp_err_t err = post_data("hello world!");
+    error_check(post_data("192.168.1.148", "dev", "dev", "chuj"));
 }

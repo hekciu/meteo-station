@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+    "net/http/httputil"
 	"os"
     "database/sql"
     "encoding/json"
@@ -101,7 +102,13 @@ func _auth(r * http.Request) bool {
 
 
 func postMeasurements(w http.ResponseWriter, r * http.Request) {
-    fmt.Printf("POST /pms5003\n")
+    reqDump, err := httputil.DumpRequest(r, true)
+
+    if err != nil {
+        http.Error(w, "an error has occured\n", http.StatusInternalServerError)
+    }
+
+    fmt.Printf("got request:\n%s\n", string(reqDump));
 
     if (!_auth(r)) {
         http.Error(w, "unauthorized\n", http.StatusUnauthorized)
@@ -117,7 +124,7 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
 
     measurement := Pms5003MeasurementDTO{}
 
-    err := decoder.Decode(&measurement)
+    err = decoder.Decode(&measurement)
 
     if err != nil {
         http.Error(w, "error parsing body\n", http.StatusBadRequest)
@@ -214,11 +221,17 @@ func handlePms5003Measurements(w http.ResponseWriter, r * http.Request) {
 
 
 func main() {
-
     http.HandleFunc("/pms5003", handlePms5003Measurements);
 
-    fmt.Printf("starting server...\n")
-    server_err := http.ListenAndServe(":3333", nil)
+    port := os.Getenv("PORT")
+
+    if len(port) == 0 {
+        fmt.Fprint(os.Stderr, "port environment variable is missing\n")
+        return;
+    }
+
+    fmt.Printf("starting server at %s...\n", port)
+    server_err := http.ListenAndServe(":" + port, nil)
 
     if errors.Is(server_err, http.ErrServerClosed) {
         fmt.Printf("server closed\n");

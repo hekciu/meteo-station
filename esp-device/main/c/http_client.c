@@ -1,4 +1,8 @@
+#include <stdio.h>
+
 #include "esp_http_client.h"
+#include "esp_log.h"
+
 
 static const char * TAG = "http_client";
 
@@ -36,25 +40,37 @@ static esp_err_t _http_event_handler(esp_http_client_event_t * evt) {
             esp_http_client_set_redirection(evt->client);
             break;
     }
+
+    return ESP_OK;
 };
 
 
-esp_err_t post_data(const char * data) {
+esp_err_t post_data(
+    const char * host,
+    const char * username,
+    const char * password,
+    const char * data
+) {
     esp_err_t err;
 
+    ESP_LOGI(TAG, "sending request with body: \n%s\n", data);
+
+    // char local_response_buffer[HTTP_MAX_RESPONSE_BUFFER + 1] = {0};
+
     esp_http_client_config_t config = {
-        .host = SERVER_HOST,
+        .host = host,
         .path = "/pms5003",
         .port = 2317,
-        .mathod = HTTP_METHOD_POST,
+        .method = HTTP_METHOD_POST,
         .event_handler = _http_event_handler,
         .disable_auto_redirect = true,
         .auth_type = HTTP_AUTH_TYPE_BASIC,
-        .username = SERVER_USERNAME,
-        .password = SERVER_PASSWORD,
+        // .user_data = local_response_buffer,
+        .username = username,
+        .password = password,
     };
 
-    esp_http_client_handle_t client = esp_http_client_init(&client);
+    esp_http_client_handle_t client = esp_http_client_init(&config);
 
     err = esp_http_client_set_post_field(client, data, strlen(data));
 
@@ -67,4 +83,8 @@ esp_err_t post_data(const char * data) {
     if (err != ESP_OK) {
         return err;
     }
+
+    ESP_LOGI(TAG, "got response status code: %d\n", esp_http_client_get_status_code(client));;
+
+    return ESP_OK;
 };
