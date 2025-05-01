@@ -2,6 +2,7 @@
 #include <esp_wifi_types_generic.h>
 #include "nvs_flash.h"
 
+#include "utils.h"
 #include "types.h"
 #include "network.h"
 #include "http_client.h"
@@ -29,5 +30,21 @@ void app_main(void) {
     // ladne106 działa, aladne106 nie
     error_check(initialize_network("", ""));
 
-    error_check(post_data("192.168.1.148", "dev", "dev", "chuj"));
+    pms5003_measurement test = {
+        .device_timestamp = 696969,
+        .device_name = "dupadupa",
+        .pm10_standard = 123,
+        .pm25_standard = 221,
+        .pm100_standard = 231
+    };
+
+    char * data = malloc(301);
+
+    measurement_to_json(&test, data, 300);
+
+    printf("sending data :\n%s\n", data);
+
+    error_check(post_data("192.168.1.148", "dev", "dev", data));
+
+    free(data);
 }

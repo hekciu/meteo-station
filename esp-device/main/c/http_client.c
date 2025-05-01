@@ -78,6 +78,12 @@ esp_err_t post_data(
         return err;
     }
 
+    err = esp_http_client_set_header(client, "Content-Type", "application/json");
+
+    if (err != ESP_OK) {
+        return err;
+    }
+
     err = esp_http_client_perform(client);
 
     if (err != ESP_OK) {

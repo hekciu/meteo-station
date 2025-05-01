@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-    "time"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,7 +16,7 @@ import (
 
 
 type Pms5003MeasurementDTO struct {
-    DeviceTimestamp time.Time `json:"DeviceTimestamp"`
+    DeviceTimestamp uint32 `json:"DeviceTimestamp"`
     DeviceName string `json:"DeviceName"`
     Pm10Standard uint8 `json:"Pm10Standard"`
     Pm25Standard uint8 `json:"Pm25Standard"`
@@ -116,6 +115,7 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
     }
 
     if r.Body == nil {
+        fmt.Fprintf(os.Stderr, "empty body\n");
         http.Error(w, "empty body\n", http.StatusBadRequest)
         return
     }
@@ -127,6 +127,7 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
     err = decoder.Decode(&measurement)
 
     if err != nil {
+        fmt.Fprintf(os.Stderr, "error parsing body got: %s\n", err);
         http.Error(w, "error parsing body\n", http.StatusBadRequest)
         return
     }
@@ -141,7 +142,7 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
     query := fmt.Sprintf(`INSERT INTO pms5003_measurements(
         device_timestamp, device_name, pm10_standard, pm25_standard, pm100_standard)
         VALUES(to_timestamp(%d), '%s', %d, %d, %d)`,
-        measurement.DeviceTimestamp.Unix(),
+        measurement.DeviceTimestamp,
         measurement.DeviceName,
         measurement.Pm10Standard,
         measurement.Pm25Standard,
