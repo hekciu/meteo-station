@@ -1,11 +1,19 @@
 #include <stdio.h>
 #include <esp_wifi_types_generic.h>
 #include "nvs_flash.h"
+#include "esp_log.h"
+
+#include "freertos/FreeRTOS.h"
+#include <freertos/queue.h>
 
 #include "utils.h"
-#include "types.h"
+#include "dto.h"
 #include "network.h"
 #include "http_client.h"
+#include "pms5003.h"
+
+
+const char * TAG = "main";
 
 
 static void error_check(esp_err_t err) {
@@ -18,9 +26,25 @@ static void error_check(esp_err_t err) {
 
 
 void app_main(void) {
-    esp_err_t err;
+    QueueHandle_t uart_queue_handle = xQueueCreate(10, sizeof(pms5003_sensor_data));
 
-    err = nvs_flash_init();
+    error_check(initialize_pms5003_uart(&uart_queue_handle));
+
+    while (1) {
+        uint32_t data_size = 0;
+
+        uint8_t data[sizeof(pms5003_sensor_data)] = {0};
+
+        error_check(read_data_pms5003_uart(&data_size, data));
+
+        ESP_LOGI(TAG, "got %ld bytes at uart\n", data_size);
+
+        vTaskDelay(100);
+    }
+
+    return;
+
+    esp_err_t err = nvs_flash_init();
 
     if (err != ESP_OK) {
         nvs_flash_erase();
