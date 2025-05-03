@@ -44,5 +44,5 @@ typedef struct {
 } pms5003_sensor_data;
 
 
-esp_err_t initialize_pms5003_uart(QueueHandle_t * queue_handle);
+esp_err_t initialize_pms5003_uart();
 esp_err_t read_data_pms5003_uart(uint32_t * size, uint8_t * data);

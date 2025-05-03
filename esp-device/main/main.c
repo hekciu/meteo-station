@@ -15,8 +15,11 @@
 
 const char * TAG = "main";
 
+#define PMS5003_WAIT_MS 1000
+#define PMS5003_TASK_STACK_SIZE 4096
 
-static void error_check(esp_err_t err) {
+
+static inline void error_check(esp_err_t err) {
     if (err == ESP_OK) return;
 
     printf("an error has occured, details: %s\n", esp_err_to_name(err));
@@ -24,23 +27,31 @@ static void error_check(esp_err_t err) {
 }
 
 
-
-void app_main(void) {
-    QueueHandle_t uart_queue_handle = xQueueCreate(10, sizeof(pms5003_sensor_data));
-
-    error_check(initialize_pms5003_uart(&uart_queue_handle));
-
+static void vTaskPms5003(void * _) {
     while (1) {
         uint32_t data_size = 0;
 
-        uint8_t data[sizeof(pms5003_sensor_data)] = {0};
+        // uint8_t data[sizeof(pms5003_sensor_data)] = {0};
+        pms5003_sensor_data sensor_data;
 
-        error_check(read_data_pms5003_uart(&data_size, data));
+        error_check(read_data_pms5003_uart(&data_size, (uint8_t *)&sensor_data));
 
         ESP_LOGI(TAG, "got %ld bytes at uart\n", data_size);
 
-        vTaskDelay(100);
+        if (data_size >= sizeof(pms5003_sensor_data)) {
+            ESP_LOGI(TAG, "got data:\n");
+            ESP_LOGI(TAG, "%d %d\n", sensor_data.first_char, sensor_data.second_char);
+        }
+
+        vTaskDelay(PMS5003_WAIT_MS / portTICK_PERIOD_MS);
     }
+};
+
+
+void app_main(void) {
+    error_check(initialize_pms5003_uart());
+
+    xTaskCreate(vTaskPms5003, "Pms5003", PMS5003_TASK_STACK_SIZE, NULL, configMAX_PRIORITIES - 1, NULL);
 
     return;
 
