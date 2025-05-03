@@ -31,7 +31,6 @@ static void vTaskPms5003(void * _) {
     while (1) {
         uint32_t data_size = 0;
 
-        // uint8_t data[sizeof(pms5003_sensor_data)] = {0};
         pms5003_sensor_data sensor_data;
 
         error_check(read_data_pms5003_uart(&data_size, (uint8_t *)&sensor_data));
@@ -39,8 +38,20 @@ static void vTaskPms5003(void * _) {
         ESP_LOGI(TAG, "got %ld bytes at uart\n", data_size);
 
         if (data_size >= sizeof(pms5003_sensor_data)) {
-            ESP_LOGI(TAG, "got data:\n");
-            ESP_LOGI(TAG, "%d %d\n", sensor_data.first_char, sensor_data.second_char);
+            if (sensor_data.first_char == PMS5003_FIRST_CHAR && sensor_data.second_char == PMS5003_SECOND_CHAR) {
+                pms5003_measurement measurement = {
+                    .device_timestamp = 6969,
+                    .device_name = "AAAAA",
+                    .pm10_standard = transform_bytes(sensor_data.data_1_high, sensor_data.data_1_low),
+                    .pm25_standard = transform_bytes(sensor_data.data_2_high, sensor_data.data_2_low),
+                    .pm100_standard = transform_bytes(sensor_data.data_3_high, sensor_data.data_3_low),
+                };
+
+                ESP_LOGI(TAG, "got data:\n");
+                ESP_LOGI(TAG, "pm10: %d, pm25: %d, pm100: %d\n", measurement.pm10_standard, measurement.pm25_standard, measurement.pm100_standard);
+            } else {
+                ESP_LOGI(TAG, "got some malformed data");
+            }
         }
 
         vTaskDelay(PMS5003_WAIT_MS / portTICK_PERIOD_MS);
