@@ -4,6 +4,7 @@
 #include "esp_log.h"
 
 #include "pms5003.h"
+#include "utils.h"
 
 #include "freertos/FreeRTOS.h"
 #include <freertos/queue.h>
@@ -63,7 +64,22 @@ esp_err_t read_data_pms5003_uart(uint32_t * size, uint8_t * data) {
     err = uart_flush(PMS5003_UART_NUM);
 
     return err;
-}
+};
 
 
+int pms5003_validate_data(pms5003_sensor_data sensor_data) {
+    if (sensor_data.first_char != PMS5003_FIRST_CHAR
+        || sensor_data.second_char != PMS5003_SECOND_CHAR) {
+        return -1;
+    }
+
+    uint8_t n_checksum = sizeof(pms5003_sensor_data) - 2;
+    uint16_t checksum = 0;
+
+    for (uint8_t i = 0; i < n_checksum; i++) {
+        checksum += *((uint8_t *)(&sensor_data) + i);
+    }
+
+    return checksum - transform_bytes(sensor_data.data_and_check_high, sensor_data.data_and_check_low);
+};
 

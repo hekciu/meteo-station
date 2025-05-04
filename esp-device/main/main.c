@@ -38,7 +38,7 @@ static void vTaskPms5003(void * _) {
         ESP_LOGI(TAG, "got %ld bytes at uart\n", data_size);
 
         if (data_size >= sizeof(pms5003_sensor_data)) {
-            if (sensor_data.first_char == PMS5003_FIRST_CHAR && sensor_data.second_char == PMS5003_SECOND_CHAR) {
+            if (pms5003_validate_data(sensor_data) == 0) {
                 pms5003_measurement measurement = {
                     .device_timestamp = 6969,
                     .device_name = "AAAAA",
