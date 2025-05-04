@@ -11,18 +11,20 @@
 #include "network.h"
 #include "http_client.h"
 #include "pms5003.h"
+#include "time.h"
 
 
 const char * TAG = "main";
 
 #define PMS5003_WAIT_MS 1000
 #define PMS5003_TASK_STACK_SIZE 4096
+#define PMS5003_MAX_JSON_SIZE 1000
 
 
 static inline void error_check(esp_err_t err) {
     if (err == ESP_OK) return;
 
-    printf("an error has occured, details: %s\n", esp_err_to_name(err));
+    ESP_LOGE(TAG, "an error has occured, details: %s\n", esp_err_to_name(err));
     exit(1);
 }
 
@@ -39,8 +41,12 @@ static void vTaskPms5003(void * _) {
 
         if (data_size >= sizeof(pms5003_sensor_data)) {
             if (pms5003_validate_data(sensor_data) == 0) {
+                uint32_t timestamp = 0;
+
+                error_check(get_current_timestamp(&timestamp));
+
                 pms5003_measurement measurement = {
-                    .device_timestamp = 6969,
+                    .device_timestamp = timestamp,
                     .device_name = "AAAAA",
                     .pm10_standard = transform_bytes(sensor_data.data_1_high, sensor_data.data_1_low),
                     .pm25_standard = transform_bytes(sensor_data.data_2_high, sensor_data.data_2_low),
@@ -48,7 +54,19 @@ static void vTaskPms5003(void * _) {
                 };
 
                 ESP_LOGI(TAG, "got data:\n");
-                ESP_LOGI(TAG, "pm10: %d, pm25: %d, pm100: %d\n", measurement.pm10_standard, measurement.pm25_standard, measurement.pm100_standard);
+                ESP_LOGI(TAG, "pm10: %d, pm25: %d, pm100: %d\n",
+                    measurement.pm10_standard,
+                    measurement.pm25_standard,
+                    measurement.pm100_standard);
+
+
+                char data[PMS5003_MAX_JSON_SIZE] = {0};
+
+                measurement_to_json(&measurement, data, PMS5003_MAX_JSON_SIZE);
+
+                ESP_LOGI(TAG, "sending data :\n%s\n", data);
+
+                error_check(post_data("192.168.1.148", "dev", "dev", data));
             } else {
                 ESP_LOGI(TAG, "got some malformed data");
             }
@@ -60,12 +78,6 @@ static void vTaskPms5003(void * _) {
 
 
 void app_main(void) {
-    error_check(initialize_pms5003_uart());
-
-    xTaskCreate(vTaskPms5003, "Pms5003", PMS5003_TASK_STACK_SIZE, NULL, configMAX_PRIORITIES - 1, NULL);
-
-    return;
-
     esp_err_t err = nvs_flash_init();
 
     if (err != ESP_OK) {
@@ -75,22 +87,9 @@ void app_main(void) {
 
     // ladne106 działa, aladne106 nie
     error_check(initialize_network("", ""));
+    error_check(time_synchronize_sntp());
+    error_check(initialize_pms5003_uart());
 
-    pms5003_measurement test = {
-        .device_timestamp = 696969,
-        .device_name = "dupadupa",
-        .pm10_standard = 123,
-        .pm25_standard = 221,
-        .pm100_standard = 231
-    };
+    xTaskCreate(vTaskPms5003, "Pms5003", PMS5003_TASK_STACK_SIZE, NULL, configMAX_PRIORITIES - 1, NULL);
 
-    char * data = malloc(301);
-
-    measurement_to_json(&test, data, 300);
-
-    printf("sending data :\n%s\n", data);
-
-    error_check(post_data("192.168.1.148", "dev", "dev", data));
-
-    free(data);
 }
