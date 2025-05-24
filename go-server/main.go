@@ -24,6 +24,14 @@ type Pms5003MeasurementDTO struct {
 }
 
 
+// TODO: set precison https://stackoverflow.com/questions/1196415/what-datatype-to-use-when-storing-latitude-and-longitude-data-in-sql-databases
+type LocationDTO struct {
+    DeviceName string `json:"DeviceName"`
+    Latitude uint32 `json:"Latitude"`
+    Longitude uint32 `json:"Longitude"`
+}
+
+
 func _connectToDb() *sql.DB {
     pgPort := os.Getenv("PG_PORT")
     pgHost := os.Getenv("PG_HOST")
@@ -176,7 +184,17 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
         return
     }
 
-    rows, err := db.Query("SELECT * FROM pms5003_measurements")
+    from := r.URL.Query().Get("from");
+    to := r.URL.Query().Get("to");
+
+    if len(from) == 0 || len(to) == 0 {
+        http.Error(w, "missing query params\n", http.StatusInternalServerError)
+        return
+    }
+
+    query := fmt.Sprintf("SELECT * FROM pms5003_measurements WHERE device_timestamp > to_timestamp(%d) and device_timestamp < to_timestamp(%d)", from, to)
+
+    rows, err := db.Query(query)
 
     if err != nil {
         http.Error(w, "database error\n", http.StatusInternalServerError)
@@ -210,6 +228,111 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
 }
 
 
+func getLocation(w http.ResponseWriter, r * http.Request) {
+    fmt.Printf("GET /technical/location\n")
+
+    if (!_auth(r)) {
+        http.Error(w, "unauthorized\n", http.StatusUnauthorized)
+        return
+    }
+
+    db := _connectToDb()
+
+    defer db.Close()
+
+    if db == nil {
+        http.Error(w, "database error\n", http.StatusInternalServerError)
+        return
+    }
+
+    deviceName := r.URL.Query().Get("device_name");
+
+    if len(deviceName) == 0 {
+        http.Error(w, "missing device_name param\n", http.StatusInternalServerError)
+        return
+    }
+
+    query := fmt.Sprintf("SELECT * FROM location WHERE device_name='%s'", deviceName);
+
+    rows, err := db.Query(query)
+
+    if err != nil {
+        http.Error(w, "database error\n", http.StatusInternalServerError)
+        return
+    }
+
+    defer rows.Close()
+
+    output := LocationDTO{}
+
+    rows.Scan(&output.DeviceName,
+                &output.Latitude,
+                &output.Longitude)
+
+    marshalled, err := json.Marshal(output)
+
+    if err != nil {
+        http.Error(w, "as error has occured\n", http.StatusInternalServerError)
+        return
+    }
+
+    io.WriteString(w, string(marshalled))
+}
+
+
+func putLocation(w http.ResponseWriter, r * http.Request) {
+    fmt.Printf("PUT /technical/location\n")
+
+    if (!_auth(r)) {
+        http.Error(w, "unauthorized\n", http.StatusUnauthorized)
+        return
+    }
+
+    db := _connectToDb()
+
+    defer db.Close()
+
+    if db == nil {
+        http.Error(w, "database error\n", http.StatusInternalServerError)
+        return
+    }
+
+    if r.Body == nil {
+        fmt.Fprintf(os.Stderr, "empty body\n");
+        http.Error(w, "empty body\n", http.StatusBadRequest)
+        return
+    }
+
+    decoder := json.NewDecoder(r.Body)
+
+    loc := LocationDTO{}
+
+    err := decoder.Decode(&loc)
+
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "error parsing body got: %s\n", err);
+        http.Error(w, "error parsing body\n", http.StatusBadRequest)
+        return
+    }
+
+    query := fmt.Sprintf(`INSERT INTO location(
+        device_name, latitude, longitude)
+        VALUES('%s', %d, %d)`,
+        loc.DeviceName,
+        loc.Latitude,
+        loc.Longitude)
+
+    _, err = db.Query(query)
+
+    if err != nil {
+        http.Error(w, "database error\n", http.StatusInternalServerError)
+        return
+    }
+
+    io.WriteString(w, "Ok")
+}
+
+
 func handlePms5003Measurements(w http.ResponseWriter, r * http.Request) {
     if r.Method == "GET" {
         getMeasurements(w, r)
@@ -221,8 +344,20 @@ func handlePms5003Measurements(w http.ResponseWriter, r * http.Request) {
 }
 
 
+func handleLocation(w http.ResponseWriter, r * http.Request) {
+    if r.Method == "GET" {
+        getLocation(w, r)
+    } else if r.Method == "PUT" {
+        putLocation(w, r)
+    } else {
+        io.WriteString(w, "method not supported\n")
+    }
+}
+
+
 func main() {
     http.HandleFunc("/pms5003", handlePms5003Measurements);
+    http.HandleFunc("/technical/location", handleLocation);
 
     port := os.Getenv("PORT")
 
