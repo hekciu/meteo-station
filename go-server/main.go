@@ -24,11 +24,10 @@ type Pms5003MeasurementDTO struct {
 }
 
 
-// TODO: set precison https://stackoverflow.com/questions/1196415/what-datatype-to-use-when-storing-latitude-and-longitude-data-in-sql-databases
 type LocationDTO struct {
     DeviceName string `json:"DeviceName"`
-    Latitude uint32 `json:"Latitude"`
-    Longitude uint32 `json:"Longitude"`
+    Latitude float32 `json:"Latitude"`
+    Longitude float32 `json:"Longitude"`
 }
 
 
@@ -265,9 +264,20 @@ func getLocation(w http.ResponseWriter, r * http.Request) {
 
     output := LocationDTO{}
 
-    rows.Scan(&output.DeviceName,
-                &output.Latitude,
-                &output.Longitude)
+    var numRows int = 0
+    // we will just get the last one, this is awful but will work for now
+    for rows.Next() {
+        rows.Scan(&output.DeviceName,
+                    &output.Latitude,
+                    &output.Longitude)
+
+        numRows++;
+    }
+
+    if numRows == 0 {
+        http.Error(w, "did not find location for provided device_name\n", http.StatusInternalServerError)
+        return
+    }
 
     marshalled, err := json.Marshal(output)
 
