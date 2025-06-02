@@ -16,9 +16,20 @@
 
 const char * TAG = "main";
 
-#define PMS5003_WAIT_MS 1000
+#define PMS5003_WAIT_MS (5 * 1000 * 1000)
 #define PMS5003_TASK_STACK_SIZE 4096
 #define PMS5003_MAX_JSON_SIZE 1000
+
+/*
+    The following definitions should be available at compile time (add_compile_definitions):
+    - DEVICE_NAME
+    - API_USERNAME
+    - API_PASSWORD
+    - API_HOST
+    - API_PORT
+    - WIFI_USERNAME
+    - WIFI_PASSWORD
+*/
 
 
 static inline void error_check(esp_err_t err) {
@@ -37,8 +48,6 @@ static void vTaskPms5003(void * _) {
 
         error_check(read_data_pms5003_uart(&data_size, (uint8_t *)&sensor_data));
 
-        ESP_LOGI(TAG, "got %ld bytes at uart\n", data_size);
-
         if (data_size >= sizeof(pms5003_sensor_data)) {
             if (pms5003_validate_data(sensor_data) == 0) {
                 uint32_t timestamp = 0;
@@ -47,18 +56,11 @@ static void vTaskPms5003(void * _) {
 
                 pms5003_measurement measurement = {
                     .device_timestamp = timestamp,
-                    .device_name = "AAAAA",
+                    .device_name = DEVICE_NAME,
                     .pm10_standard = transform_bytes(sensor_data.data_1_high, sensor_data.data_1_low),
                     .pm25_standard = transform_bytes(sensor_data.data_2_high, sensor_data.data_2_low),
                     .pm100_standard = transform_bytes(sensor_data.data_3_high, sensor_data.data_3_low),
                 };
-
-                ESP_LOGI(TAG, "got data:\n");
-                ESP_LOGI(TAG, "pm10: %d, pm25: %d, pm100: %d\n",
-                    measurement.pm10_standard,
-                    measurement.pm25_standard,
-                    measurement.pm100_standard);
-
 
                 char data[PMS5003_MAX_JSON_SIZE] = {0};
 
@@ -66,10 +68,12 @@ static void vTaskPms5003(void * _) {
 
                 ESP_LOGI(TAG, "sending data :\n%s\n", data);
 
-                error_check(post_data("192.168.1.148", "dev", "dev", data));
+                error_check(post_data(API_HOST, API_PORT, API_USERNAME, API_PASSWORD, data));
             } else {
                 ESP_LOGI(TAG, "got some malformed data");
             }
+        } else {
+            ESP_LOGI(TAG, "got nothing");
         }
 
         vTaskDelay(PMS5003_WAIT_MS / portTICK_PERIOD_MS);
@@ -86,7 +90,7 @@ void app_main(void) {
     }
 
     // ladne106 działa, aladne106 nie
-    error_check(initialize_network("", ""));
+    error_check(initialize_network(WIFI_USERNAME, WIFI_PASSWORD));
     error_check(time_synchronize_sntp());
     error_check(initialize_pms5003_uart());
 

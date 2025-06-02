@@ -1,3 +1,4 @@
 sdkconfig
 main/envs.h
 build/
+env.sh
