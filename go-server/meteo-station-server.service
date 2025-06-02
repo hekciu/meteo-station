@@ -1,0 +1,11 @@
+[Unit]
+Description=Meteo station server app, https://github.com/hekciu/meteo-station
+
+[Service]
+WorkingDirectory=/usr/bin/meteo-station-server/
+ExecStart=/usr/bin/meteo-station-server/run.sh
+ExecReload=/bin/kill -s HUP $MAINPID
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
