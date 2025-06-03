@@ -303,7 +303,7 @@ func putLocation(w http.ResponseWriter, r * http.Request) {
     defer db.Close()
 
     if db == nil {
-        http.Error(w, "database error\n", http.StatusInternalServerError)
+        http.Error(w, "cound not connect to database\n", http.StatusInternalServerError)
         return
     }
 
@@ -327,7 +327,7 @@ func putLocation(w http.ResponseWriter, r * http.Request) {
 
     query := fmt.Sprintf(`INSERT INTO location(
         device_name, latitude, longitude)
-        VALUES('%s', %d, %d)`,
+        VALUES('%s', %f, %f)`,
         loc.DeviceName,
         loc.Latitude,
         loc.Longitude)
@@ -335,12 +335,62 @@ func putLocation(w http.ResponseWriter, r * http.Request) {
     _, err = db.Query(query)
 
     if err != nil {
-        http.Error(w, "database error\n", http.StatusInternalServerError)
+        http.Error(w, "could not insert data into database\n", http.StatusInternalServerError)
         return
     }
 
     io.WriteString(w, "Ok")
 }
+
+
+func getDevices(w http.ResponseWriter, r * http.Request) {
+    fmt.Printf("GET /devices\n")
+
+    if (!_auth(r)) {
+        http.Error(w, "unauthorized\n", http.StatusUnauthorized)
+        return
+    }
+
+    db := _connectToDb()
+
+    defer db.Close()
+
+    if db == nil {
+        http.Error(w, "could not connect to database\n", http.StatusInternalServerError)
+        return
+    }
+
+    query := "SELECT device_name FROM location";
+
+    rows, err := db.Query(query)
+
+    if err != nil {
+        http.Error(w, "could not execute query\n", http.StatusInternalServerError)
+        return
+    }
+
+    defer rows.Close()
+
+    output := []string{}
+
+    for rows.Next() {
+        var deviceName string
+
+        rows.Scan(&deviceName)
+
+        output = append(output, deviceName)
+    }
+
+    marshalled, err := json.Marshal(output)
+
+    if err != nil {
+        http.Error(w, "as error has occured\n", http.StatusInternalServerError)
+        return
+    }
+
+    io.WriteString(w, string(marshalled))
+}
+
 
 
 func handlePms5003Measurements(w http.ResponseWriter, r * http.Request) {
@@ -365,8 +415,18 @@ func handleLocation(w http.ResponseWriter, r * http.Request) {
 }
 
 
+func handleDevices(w http.ResponseWriter, r * http.Request) {
+    if r.Method == "GET" {
+        getDevices(w, r)
+    } else {
+        io.WriteString(w, "method not supported\n")
+    }
+}
+
+
 func main() {
     http.HandleFunc("/pms5003", handlePms5003Measurements);
+    http.HandleFunc("/devices", handleDevices);
     http.HandleFunc("/technical/location", handleLocation);
 
     port := os.Getenv("PORT")
