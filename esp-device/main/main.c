@@ -16,7 +16,7 @@
 
 const char * TAG = "main";
 
-#define PMS5003_WAIT_MS (5 * 1000 * 1000)
+#define PMS5003_WAIT_MS (5 * 60 * 1000)
 #define PMS5003_TASK_STACK_SIZE 4096
 #define PMS5003_MAX_JSON_SIZE 1000
 
