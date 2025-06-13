@@ -142,7 +142,7 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
     db := _connectToDb()
 
     if db == nil {
-        http.Error(w, "database error\n", http.StatusInternalServerError)
+        http.Error(w, "database error, got nil\n", http.StatusInternalServerError)
         return
     }
 
@@ -179,7 +179,7 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
     defer db.Close()
 
     if db == nil {
-        http.Error(w, "database error\n", http.StatusInternalServerError)
+        http.Error(w, "database error, got nil\n", http.StatusInternalServerError)
         return
     }
 
@@ -191,12 +191,12 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
         return
     }
 
-    query := fmt.Sprintf("SELECT * FROM pms5003_measurements WHERE device_timestamp > to_timestamp(%d) and device_timestamp < to_timestamp(%d)", from, to)
+    query := fmt.Sprintf("SELECT * FROM pms5003_measurements WHERE device_timestamp > to_timestamp(%s) and device_timestamp < to_timestamp(%s)", from, to)
 
     rows, err := db.Query(query)
 
     if err != nil {
-        http.Error(w, "database error\n", http.StatusInternalServerError)
+        http.Error(w, "database error, could not execute query\n", http.StatusInternalServerError)
         return
     }
 
