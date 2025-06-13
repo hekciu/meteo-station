@@ -24,14 +24,6 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 
-interface Pms5003Data {
-    pm10Standard: number,
-    pm25Standard: number,
-    pm100Standard: number,
-    deviceName: string,
-    deviceTimestamp: number,
-};
-
 
 function App(): JSX.Element {
     const [serverUrl, setServerUrl] = useState<string>();

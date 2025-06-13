@@ -13,9 +13,11 @@
     "base-64": "^1.0.0",
     "react": "^18.2.0",
     "react-native": "^0.72.0",
+    "react-native-chart-kit": "^6.12.0",
     "react-native-eject": "^1.0.2",
     "react-native-maps": "1.13",
-    "react-native-multiple-select": "^0.5.12"
+    "react-native-multiple-select": "^0.5.12",
+    "react-native-svg": "^15.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

@@ -1,5 +1,6 @@
 import {
     useEffect,
+    useRef,
 useState
 } from 'react';
 
@@ -13,18 +14,28 @@ Button,
 
 import Map from './Map';
 import { API_PASSWORD, API_URL, API_USERNAME } from '../variables';
+import Charts from './Charts';
 
 
 type DataView = 'chart' | 'map';
 
 
-interface EdgeDevice {
+interface Pms5003Data {
+    Pm10Standard: number,
+    Pm25Standard: number,
+    Pm100Standard: number,
+    DeviceName: string,
+    DeviceTimestamp: number,
+};
+
+export interface EdgeDevice {
     name: string;
     location?: {
         latitude: number;
         longitude: number;
     };
     selected: boolean;
+    measurements: Pms5003Data[];
 }
 
 
@@ -33,18 +44,54 @@ const getBasicAuth = () => {
 }
 
 
+const normalizeTimestamp = (timestamp: number) => Math.floor(timestamp / 1000)
+
+
 export default function Measurements() {
     const [dataView, setDataView] = useState<DataView>('chart');
-    const [devices, setDevices] = useState<EdgeDevice[]>([]);
+    const devicesRef = useRef<EdgeDevice[]>([]);
+    const [devices, setDevices] = useState<EdgeDevice[]>(devicesRef.current);
+    const [timestampFrom, setTimestampFrom] = useState(Date.now() - 1000*60*60*24*100);
+    const [timestampTo, setTimestampTo] = useState(Date.now() + 5 * 1000);
 
     const onSelectedItemsChange = (selectedItems: { id: string, name: string }[]) => {
+        /*
         const selectedItemsNames = selectedItems.map((i) => i.id);
 
         setDevices(devices.map((d) => selectedItemsNames.includes(d.name) ? {
             ...d,
             selected: true
         }: d));
+        */
     };
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            (async () => {
+                const response = await fetch(`${API_URL}/pms5003?from=${normalizeTimestamp(timestampFrom)}&to=${normalizeTimestamp(timestampTo)}`, {
+                    headers: [
+                        ['Authorization', getBasicAuth()]
+                    ],
+                });
+
+                const measurements = await response.json() as Pms5003Data[];
+
+                const newDevices = devicesRef.current.map((d) => ({...d}));
+
+                for (const device of newDevices) {
+                    device.measurements = measurements
+                        .filter((data) => data.DeviceName === device.name)
+                        .sort((a, b) => a.DeviceTimestamp - b.DeviceTimestamp);
+                }
+
+
+                setDevices(newDevices);
+                devicesRef.current = newDevices
+            })()
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, [timestampFrom, timestampTo]);
 
 
     useEffect(() => {
@@ -59,7 +106,8 @@ export default function Measurements() {
 
             const newDevices: EdgeDevice[] = fetchedDevices.map((name) => ({
                 name: name,
-                selected: false
+                selected: false,
+                measurements: []
             }))
 
             for (const deviceObj of newDevices) {
@@ -82,6 +130,7 @@ export default function Measurements() {
             }
 
             setDevices(newDevices);
+            devicesRef.current = newDevices;
         })()
     }, [])
 
@@ -102,8 +151,10 @@ export default function Measurements() {
             }}/>
             {
                 dataView === 'map' ?
-                <Map/> :
-                <></>
+                <Map
+                    devices={devices}
+                /> :
+                <Charts/>
             }
         </View>
     )
