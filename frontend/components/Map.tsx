@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
-import MapView from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 
 
 interface Region {
@@ -21,8 +22,18 @@ export default function Map() {
 
   return (
     <MapView
+      style={styles.map}
+      provider={PROVIDER_GOOGLE}
       region={region}
       onRegionChange={(region) => setRegion(region)}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  map: {
+    ...StyleSheet.absoluteFillObject,
+    top: 100,
+    height: 600,
+  },
+})

@@ -49,7 +49,7 @@ function App(): JSX.Element {
             </View>
                 {showSettings ?
                     <Settings
-                        serverUrl={serverUrl}
+                        serverUrl={serverUrl || ''}
                         setServerUrl={setServerUrl}
                     /> :
                 <Measurements/>}
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 5,
         right: 5,
-        display: 'inline',
+        display: 'flex',
         backgroundColor: 'green',
         zIndex: 100,
     },    
