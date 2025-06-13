@@ -11,16 +11,17 @@ import (
     "encoding/json"
     "crypto/subtle"
     "crypto/sha256"
+    "time"
     _ "github.com/lib/pq"
 )
 
 
 type Pms5003MeasurementDTO struct {
-    DeviceTimestamp uint32 `json:"DeviceTimestamp"`
+    DeviceTimestamp int64 `json:"DeviceTimestamp"`
     DeviceName string `json:"DeviceName"`
-    Pm10Standard uint8 `json:"Pm10Standard"`
-    Pm25Standard uint8 `json:"Pm25Standard"`
-    Pm100Standard uint8 `json:"Pm100Standard"`
+    Pm10Standard int16 `json:"Pm10Standard"`
+    Pm25Standard int16 `json:"Pm25Standard"`
+    Pm100Standard int16 `json:"Pm100Standard"`
 }
 
 
@@ -142,7 +143,7 @@ func postMeasurements(w http.ResponseWriter, r * http.Request) {
     db := _connectToDb()
 
     if db == nil {
-        http.Error(w, "database error\n", http.StatusInternalServerError)
+        http.Error(w, "database error, got nil\n", http.StatusInternalServerError)
         return
     }
 
@@ -179,7 +180,7 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
     defer db.Close()
 
     if db == nil {
-        http.Error(w, "database error\n", http.StatusInternalServerError)
+        http.Error(w, "database error, got nil\n", http.StatusInternalServerError)
         return
     }
 
@@ -191,12 +192,12 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
         return
     }
 
-    query := fmt.Sprintf("SELECT * FROM pms5003_measurements WHERE device_timestamp > to_timestamp(%d) and device_timestamp < to_timestamp(%d)", from, to)
+    query := fmt.Sprintf("SELECT * FROM pms5003_measurements WHERE device_timestamp > to_timestamp(%s) and device_timestamp < to_timestamp(%s)", from, to)
 
     rows, err := db.Query(query)
 
     if err != nil {
-        http.Error(w, "database error\n", http.StatusInternalServerError)
+        http.Error(w, "database error, could not execute query\n", http.StatusInternalServerError)
         return
     }
 
@@ -207,13 +208,29 @@ func getMeasurements(w http.ResponseWriter, r * http.Request) {
     for rows.Next() {
         rowData :=  Pms5003MeasurementDTO{}
 
-        rows.Scan(&rowData.DeviceTimestamp,
+        var timestamp time.Time
+
+        err := rows.Scan(&timestamp,
                     &rowData.DeviceName,
                     &rowData.Pm10Standard,
                     &rowData.Pm25Standard,
                     &rowData.Pm100Standard)
 
+        if err != nil {
+            fmt.Printf("error: %w\n", err);
+        }
+
+        rowData.DeviceTimestamp = timestamp.Unix()
+
         output = append(output, rowData)
+    }
+
+    err = rows.Err();
+
+
+    if err != nil {
+        http.Error(w, "error occured while reading rows", http.StatusInternalServerError)
+        return
     }
 
     marshalled, err := json.Marshal(output)
@@ -446,4 +463,4 @@ func main() {
         fmt.Printf("error starting server: %s\n", server_err);
         os.Exit(1);
     }
-}  	
+}
